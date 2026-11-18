@@ -1065,6 +1065,7 @@
           const on = Number(d.ITEMS && d.ITEMS[0] && d.ITEMS[0].VALUE) === 1;
           $('dot').classList.toggle('on', on);
           $('pw').textContent = on ? 'TV on' : 'Standby';
+          store.set(on ? 'seenOn' : 'seenOff', String(Date.now()));
           if (on && store.get('token')) { void readVolume(); if (!inputsLoaded) void loadInputs(); }
           return on;
         } catch {
@@ -1104,8 +1105,18 @@
       const autoOn = () => store.get('auto', '1') === '1';
       async function autoLaunch() {
         if (!autoOn() || !store.get('token') || Date.now() - lastAuto < 20000) return;
+        const prevOn = Number(store.get('seenOn', '0')), prevOff = Number(store.get('seenOff', '0'));
         const on = await refresh();
         if (on === true) {
+          // Never interrupt something being watched: only open Our Space for a TV that was just turned on.
+          const fresh = !prevOn || prevOff > prevOn || Date.now() - prevOn > 6 * 3600 * 1000;
+          let watching = false;
+          try {
+            const d = await tv('/app/current');
+            const v = d.ITEM && d.ITEM.VALUE;
+            watching = !!v && APPS.some(a => String(a.id) === String(v.APP_ID) && a.ns === Number(v.NAME_SPACE));
+          } catch {}
+          if (watching || !fresh) { say($('status'), ''); return; }
           lastAuto = Date.now();
           await openOnTv($('status'), 'Opened Our Space on your TV.');
         } else if (on === false) {
@@ -1479,7 +1490,8 @@
         if (document.hidden) { hiddenAt = Date.now(); return; }
         if (!store.get('token')) return;
         // Coming back after a couple of minutes counts as opening the app again.
-        if (hiddenAt && Date.now() - hiddenAt > 120000) { setTab('remote'); void autoLaunch(); } else refresh();
+        if (hiddenAt && Date.now() - hiddenAt > 120000) setTab('remote');
+        refresh();
       });
 
       renderControls();
