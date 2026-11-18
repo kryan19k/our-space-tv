@@ -895,9 +895,15 @@
         vold: [5, 0], volu: [5, 1], mute: [5, 4], powoff: [11, 0], powon: [11, 1],
       };
       const APPS = [
+        { name: 'YouTube', ns: 5, id: '1', b: '#ff0033', logo: 'youtube', tag: 'Videos' },
         { name: 'Netflix', ns: 3, id: '1', b: '#e50914', logo: 'netflix', tag: 'Movies & TV' },
         { name: 'Prime Video', ns: 2, id: '4', b: '#1a98ff', logo: 'primevideo', tag: 'Movies & TV' },
         { name: 'Hulu', ns: 2, id: '3', b: '#1ce783', logo: 'hulu', tag: 'Movies & TV' },
+        { name: 'Disney+', ns: 2, id: '75', b: '#113ccf', logo: '', tag: 'Movies & TV' },
+        { name: 'Max', ns: 2, id: '128', b: '#5b3df5', logo: 'max', tag: 'Movies & TV' },
+        { name: 'Peacock', ns: 2, id: '88', b: '#f5c518', logo: '', tag: 'Movies & TV' },
+        { name: 'Paramount+', ns: 2, id: '37', b: '#0064ff', logo: 'paramountplus', tag: 'Movies & TV' },
+        { name: 'Tubi', ns: 2, id: '61', b: '#fa382f', logo: 'tubi', tag: 'Free TV' },
         { name: 'Plex', ns: 2, id: '9', b: '#e5a00d', logo: 'plex', tag: 'Your media' },
       ];
       const THEMES = [
@@ -916,11 +922,31 @@
         clock24: false, showRecent: true, compact: false,
       };
       const $ = id => document.getElementById(id);
-      const store = {
-        get(k, d = '') { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
-        set(k, v) { try { localStorage.setItem(k, v); } catch {} },
-        del(k) { try { localStorage.removeItem(k); } catch {} },
+      // Pairing survives Safari clearing site data: these keys are mirrored into a 1-year cookie.
+      const KEEP = ['token', 'ip', 'deviceId', 'cfg.v1', 'auto'];
+      const ck = {
+        get(k) {
+          const m = document.cookie.split('; ').find(c => c.startsWith('os_' + k + '='));
+          try { return m ? decodeURIComponent(m.slice(k.length + 4)) : null; } catch { return null; }
+        },
+        set(k, v) { try { document.cookie = `os_${k}=${encodeURIComponent(v)}; max-age=31536000; path=/; SameSite=Lax; Secure`; } catch {} },
+        del(k) { try { document.cookie = `os_${k}=; max-age=0; path=/`; } catch {} },
       };
+      const store = {
+        get(k, d = '') {
+          let v = null;
+          try { v = localStorage.getItem(k); } catch {}
+          if (v == null && KEEP.includes(k)) {
+            v = ck.get(k);
+            if (v != null) { try { localStorage.setItem(k, v); } catch {} }
+          }
+          return v ?? d;
+        },
+        set(k, v) { try { localStorage.setItem(k, v); } catch {} if (KEEP.includes(k)) ck.set(k, v); },
+        del(k) { try { localStorage.removeItem(k); } catch {} ck.del(k); },
+      };
+      try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
+      KEEP.forEach(k => { try { const v = localStorage.getItem(k); if (v != null && ck.get(k) == null) ck.set(k, v); } catch {} });
       let deviceId = store.get('deviceId');
       if (!deviceId) {
         deviceId = (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()) + Math.random();
@@ -954,9 +980,11 @@
         if (auth && token) headers.AUTH = token;
         let res;
         try {
-          res = await fetch(base() + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+          res = await fetch(base() + path, { method, headers, signal: AbortSignal.timeout(7000), body: body === undefined ? undefined : JSON.stringify(body) });
         } catch {
-          throw new Error("Can't reach the TV. Check you're on home Wi-Fi, the TV is on, and you allowed its certificate.");
+          const e = new Error("Can't reach the TV. Check you're on home Wi-Fi, the TV is on, and you allowed its certificate.");
+          e.unreachable = true;
+          throw e;
         }
         let data;
         try { data = await res.json(); } catch { throw new Error('The TV sent an unexpected reply.'); }
@@ -1099,7 +1127,11 @@
             await key(b.dataset.key); say($('status'), '');
             if (b.dataset.key === 'powon') void afterPowerOn();
             else if (b.dataset.key.startsWith('pow')) setTimeout(refresh, 2500);
-          } catch (e) { say($('status'), e.message, 'bad'); }
+          } catch (e) {
+            say($('status'), e.unreachable && b.dataset.key === 'powon'
+              ? "The TV isn't answering — it's in deep standby, which no phone can wake. On the TV: Menu → System → Power Mode → Quick Start. After that, On works from here."
+              : e.message, 'bad');
+          }
         };
       });
       for (const a of APPS) {
@@ -1109,11 +1141,12 @@
         if (a.logo === 'primevideo') img.className = 'wide';
         img.onerror = () => img.remove();
         const sm = document.createElement('small'); sm.textContent = a.tag;
-        b.append(img, a.name, sm);
+        if (a.logo) b.append(img);
+        b.append(a.name, sm);
         b.onclick = async () => {
           buzz();
           try {
-            await tv('/app/launch', 'PUT', { VALUE: { APP_ID: a.id, NAME_SPACE: a.ns, MESSAGE: '' } });
+            await tv('/app/launch', 'PUT', { VALUE: { APP_ID: a.id, NAME_SPACE: a.ns, MESSAGE: null } });
             say($('status'), `Asked the TV to open ${a.name}.`, 'ok');
           } catch (e) { say($('status'), e.message, 'bad'); }
         };
