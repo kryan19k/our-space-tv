@@ -356,17 +356,46 @@
       }
       /* app tiles */
       .tile {
+        position: relative;
+        overflow: hidden;
         flex-direction: column;
-        gap: 6px;
-        min-height: 78px;
-        font-size: 13px;
-        font-weight: 600;
-        border: 0;
+        justify-content: flex-end;
+        align-items: flex-start;
+        gap: 4px;
+        min-height: 104px;
+        padding: 14px;
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: -0.1px;
         color: #fff;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        text-align: left;
+        border: 1px solid color-mix(in srgb, var(--b) 45%, transparent);
+        background:
+          radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--b) 55%, transparent) 0%, transparent 60%),
+          linear-gradient(160deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+        box-shadow:
+          0 10px 28px color-mix(in srgb, var(--b) 22%, transparent),
+          inset 0 1px 0 rgba(255, 255, 255, 0.22);
       }
-      .tile b {
-        font-size: 20px;
+      .tile img {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        height: 34px;
+        width: auto;
+        max-width: 56%;
+        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+      }
+      .tile img.wide {
+        height: auto;
+        width: 84px;
+        max-width: 62%;
+        top: 18px;
+      }
+      .tile small {
+        font-weight: 500;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.72);
       }
       /* bottom tab bar */
       nav {
@@ -825,6 +854,11 @@
           </div>
         </div>
         <div class="card">
+          <h2>When I open this app</h2>
+          <label class="switch"><span>Open Our Space on the TV automatically</span><input type="checkbox" id="autoOpen" /></label>
+          <small class="note">If the TV is on, Our Space opens right away. If it is off, tap On and it opens when the TV wakes.</small>
+        </div>
+        <div class="card">
           <h2>Launcher page the TV loads</h2>
           <input id="launcherUrl" type="url" inputmode="url" autocapitalize="off" autocorrect="off" />
           <div class="row two" style="margin-top: 10px">
@@ -861,10 +895,10 @@
         vold: [5, 0], volu: [5, 1], mute: [5, 4], powoff: [11, 0], powon: [11, 1],
       };
       const APPS = [
-        { name: 'Netflix', ns: 3, id: '1', c: 'linear-gradient(135deg,#e50914,#8f0710)', m: 'N' },
-        { name: 'Prime Video', ns: 2, id: '4', c: 'linear-gradient(135deg,#1aa7ff,#0b5fa8)', m: 'prime' },
-        { name: 'Hulu', ns: 2, id: '3', c: 'linear-gradient(135deg,#1ce783,#0b8a4b)', m: 'hulu' },
-        { name: 'Plex', ns: 2, id: '9', c: 'linear-gradient(135deg,#e5ad38,#9a6a10)', m: 'plex' },
+        { name: 'Netflix', ns: 3, id: '1', b: '#e50914', logo: 'netflix', tag: 'Movies & TV' },
+        { name: 'Prime Video', ns: 2, id: '4', b: '#1a98ff', logo: 'primevideo', tag: 'Movies & TV' },
+        { name: 'Hulu', ns: 2, id: '3', b: '#1ce783', logo: 'hulu', tag: 'Movies & TV' },
+        { name: 'Plex', ns: 2, id: '9', b: '#e5a00d', logo: 'plex', tag: 'Your media' },
       ];
       const THEMES = [
         ['alpine', 'Alpine dusk', '#c9c3ff'],
@@ -941,9 +975,11 @@
           const on = Number(d.ITEMS && d.ITEMS[0] && d.ITEMS[0].VALUE) === 1;
           $('dot').classList.toggle('on', on);
           $('pw').textContent = on ? 'TV on' : 'Standby';
+          return on;
         } catch {
           $('dot').classList.remove('on');
           $('pw').textContent = 'Offline';
+          return null;
         }
       }
 
@@ -969,6 +1005,34 @@
           say(statusEl, okText, 'ok');
           buzz();
         } catch (e) { say(statusEl, e.message, 'bad'); }
+      }
+
+      /* ---------- open Our Space automatically ---------- */
+      const sleep = ms => new Promise(r => setTimeout(r, ms));
+      let lastAuto = 0;
+      const autoOn = () => store.get('auto', '1') === '1';
+      async function autoLaunch() {
+        if (!autoOn() || !store.get('token') || Date.now() - lastAuto < 20000) return;
+        const on = await refresh();
+        if (on === true) {
+          lastAuto = Date.now();
+          await openOnTv($('status'), 'Opened Our Space on your TV.');
+        } else if (on === false) {
+          say($('status'), 'The TV is off. Tap On and Our Space will open when it wakes.');
+        }
+      }
+      async function afterPowerOn() {
+        if (!autoOn()) return;
+        say($('status'), 'Waiting for the TV to wake…');
+        for (let i = 0; i < 20; i++) {
+          await sleep(2000);
+          if ((await refresh()) === true) {
+            await sleep(6000);
+            lastAuto = Date.now();
+            return openOnTv($('status'), 'Opened Our Space on your TV.');
+          }
+        }
+        say($('status'), 'The TV did not wake in time. Tap “Open Our Space” when it is on.', 'bad');
       }
 
       /* ---------- tabs & state ---------- */
@@ -1033,14 +1097,19 @@
           buzz();
           try {
             await key(b.dataset.key); say($('status'), '');
-            if (b.dataset.key.startsWith('pow')) setTimeout(refresh, 2500);
+            if (b.dataset.key === 'powon') void afterPowerOn();
+            else if (b.dataset.key.startsWith('pow')) setTimeout(refresh, 2500);
           } catch (e) { say($('status'), e.message, 'bad'); }
         };
       });
       for (const a of APPS) {
         const b = document.createElement('button');
-        b.className = 'tile'; b.style.background = a.c;
-        b.innerHTML = `<b>${a.m}</b>${a.name}`;
+        b.className = 'tile'; b.style.setProperty('--b', a.b);
+        const img = document.createElement('img'); img.alt = ''; img.src = 'logos/' + a.logo + '.svg';
+        if (a.logo === 'primevideo') img.className = 'wide';
+        img.onerror = () => img.remove();
+        const sm = document.createElement('small'); sm.textContent = a.tag;
+        b.append(img, a.name, sm);
         b.onclick = async () => {
           buzz();
           try {
@@ -1126,15 +1195,24 @@
       $('resetCfg').onclick = () => { cfg = { ...DEFAULT_CFG }; saveCfg(); renderControls(); say($('cStatus'), 'Reset. Tap “Save & show on TV” to apply.', 'ok'); };
 
       /* ---------- settings ---------- */
+      $('autoOpen').checked = autoOn();
+      $('autoOpen').onchange = e => store.set('auto', e.target.checked ? '1' : '0');
       $('launcherUrl').value = store.get('launcherUrl', DEFAULT_LAUNCHER);
       $('saveUrl').onclick = () => { store.set('launcherUrl', $('launcherUrl').value.trim()); say($('status'), 'Saved.', 'ok'); };
       $('resetUrl').onclick = () => { store.del('launcherUrl'); $('launcherUrl').value = DEFAULT_LAUNCHER; };
       $('forget').onclick = () => { store.del('token'); show(); };
-      document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('token')) refresh(); });
+      let hiddenAt = 0;
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) { hiddenAt = Date.now(); return; }
+        if (!store.get('token')) return;
+        // Coming back after a couple of minutes counts as opening the app again.
+        if (hiddenAt && Date.now() - hiddenAt > 120000) { setTab('remote'); void autoLaunch(); } else refresh();
+      });
 
       renderControls();
       setInterval(renderPreview, 30000);
       show();
+      if (store.get('token')) { setTab('remote'); void autoLaunch(); }
     </script>
   </body>
 </html>
