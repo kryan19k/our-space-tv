@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Our Space" />
+    <meta name="theme-color" content="#0b1020" />
+    <meta name="robots" content="noindex" />
+    <title>Our Space Remote</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b1020'/%3E%3Ccircle cx='50' cy='50' r='24' fill='none' stroke='%237aa2ff' stroke-width='8'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --bg: #0b1020;
+        --card: rgba(255, 255, 255, 0.07);
+        --line: rgba(255, 255, 255, 0.14);
+        --text: #eef2ff;
+        --muted: #9aa6c7;
+        --accent: #7aa2ff;
+        --ok: #5ee6a8;
+        --bad: #ff7b8a;
+      }
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        margin: 0;
+        background: radial-gradient(120% 80% at 50% -10%, #1b2750 0%, var(--bg) 60%) fixed;
+        color: var(--text);
+        font: 16px/1.4 -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
+        min-height: 100%;
+      }
+      main {
+        max-width: 440px;
+        margin: 0 auto;
+        padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+        display: grid;
+        gap: 14px;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 6px 2px 0;
+        font-weight: 650;
+        letter-spacing: 0.2px;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 0 2px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 16px;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+      }
+      .hidden {
+        display: none !important;
+      }
+      button,
+      input,
+      a.btn {
+        font: inherit;
+        color: inherit;
+      }
+      button,
+      a.btn {
+        appearance: none;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.09);
+        border-radius: 14px;
+        padding: 12px 14px;
+        min-height: 48px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition:
+          transform 0.08s,
+          background 0.15s;
+      }
+      button:active,
+      a.btn:active {
+        transform: scale(0.96);
+        background: rgba(255, 255, 255, 0.18);
+      }
+      button:disabled {
+        opacity: 0.45;
+      }
+      .primary {
+        background: linear-gradient(135deg, #5b86ff, #9b7bff);
+        border: 0;
+        font-weight: 650;
+        font-size: 18px;
+        min-height: 64px;
+        width: 100%;
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(91, 134, 255, 0.35);
+      }
+      input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.3);
+        font-size: 17px;
+      }
+      label {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin: 10px 0 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+      }
+      .row {
+        display: grid;
+        gap: 10px;
+      }
+      .row.two {
+        grid-template-columns: 1fr 1fr;
+      }
+      .row.three {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .step {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .step b {
+        font-size: 14px;
+      }
+      .status {
+        font-size: 14px;
+        min-height: 20px;
+        margin: 2px 2px 0;
+        color: var(--muted);
+      }
+      .status.ok {
+        color: var(--ok);
+      }
+      .status.bad {
+        color: var(--bad);
+      }
+      .pill {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #666;
+      }
+      .dot.on {
+        background: var(--ok);
+      }
+      .dpad {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        max-width: 300px;
+        margin: 0 auto;
+      }
+      .dpad button {
+        min-height: 62px;
+        font-size: 22px;
+      }
+      .dpad .ok {
+        background: rgba(122, 162, 255, 0.28);
+        font-weight: 650;
+        font-size: 16px;
+      }
+      small {
+        color: var(--muted);
+      }
+      .head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .link {
+        background: none;
+        border: 0;
+        min-height: 0;
+        padding: 4px 2px;
+        color: var(--muted);
+        font-size: 13px;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="head">
+        <div>
+          <h1>Our Space Remote</h1>
+          <p class="sub" id="tvline">Not connected</p>
+        </div>
+        <span class="pill"><span class="dot" id="dot"></span><span id="pw">TV</span></span>
+      </div>
+
+      <!-- Setup / pairing -->
+      <section class="card" id="setup">
+        <b>Connect to your TV</b>
+        <small
+          ><br />Use this on your home Wi-Fi, with the TV on. You only do this once per
+          phone.</small
+        >
+        <label for="ip">TV address</label>
+        <input id="ip" inputmode="decimal" autocomplete="off" placeholder="192.168.4.28" />
+        <div class="step">
+          <b>1. Allow the TV's certificate</b>
+          <small
+            >Opens a page that looks blank or shows a warning. Tap Advanced, then continue to the
+            site. Then come back here.</small
+          >
+          <a class="btn" id="cert" target="_blank" rel="noopener">Open TV certificate page</a>
+        </div>
+        <div class="step">
+          <b>2. Pair</b>
+          <button id="pairStart">Show PIN on TV</button>
+          <div id="pinBox" class="hidden row">
+            <input id="pin" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="PIN from TV" />
+            <button id="pairFinish">Pair</button>
+          </div>
+        </div>
+        <p class="status" id="setupStatus"></p>
+      </section>
+
+      <!-- Main remote -->
+      <section id="main" class="hidden" style="display: contents">
+        <button class="primary" id="launchSpace">Open Our Space on TV</button>
+        <p class="status" id="status"></p>
+
+        <div class="card">
+          <div class="row three">
+            <button data-key="powon">Power on</button>
+            <button data-key="powoff">Power off</button>
+            <button data-key="input">Input</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="dpad">
+            <button data-key="home">⌂</button>
+            <button data-key="up">▲</button>
+            <button data-key="menu">☰</button>
+            <button data-key="left">◀</button>
+            <button class="ok" data-key="ok">OK</button>
+            <button data-key="right">▶</button>
+            <button data-key="back">↩</button>
+            <button data-key="down">▼</button>
+            <button data-key="info">i</button>
+          </div>
+          <div class="row three" style="margin-top: 12px">
+            <button data-key="vold">Vol −</button>
+            <button data-key="mute">Mute</button>
+            <button data-key="volu">Vol +</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <b>Apps</b>
+          <div class="row two" id="apps" style="margin-top: 10px"></div>
+          <small style="display: block; margin-top: 8px"
+            >App IDs are community-documented and may not match every firmware.</small
+          >
+        </div>
+
+        <div class="card">
+          <label for="launcherUrl" style="margin-top: 0">Launcher page the TV loads</label>
+          <input id="launcherUrl" inputmode="url" autocapitalize="off" autocorrect="off" />
+          <div class="row two" style="margin-top: 10px">
+            <button id="saveUrl">Save</button>
+            <button id="resetUrl">Reset</button>
+          </div>
+        </div>
+
+        <button class="link" id="forget">Forget this TV / pair again</button>
+      </section>
+    </main>
+
+    <script>
+      'use strict';
+      const PORT = 7345;
+      const DEFAULT_LAUNCHER = 'https://kryan19k.github.io/our-space-tv/tv/';
+      const KEYS = {
+        up: [3, 8],
+        down: [3, 0],
+        left: [3, 1],
+        right: [3, 7],
+        ok: [3, 2],
+        back: [4, 0],
+        menu: [4, 8],
+        home: [4, 15],
+        info: [4, 6],
+        input: [7, 1],
+        vold: [5, 0],
+        volu: [5, 1],
+        mute: [5, 4],
+        powoff: [11, 0],
+        powon: [11, 1],
+      };
+      const APPS = [
+        { name: 'Netflix', ns: 3, id: '1' },
+        { name: 'Prime Video', ns: 2, id: '4' },
+        { name: 'Hulu', ns: 2, id: '3' },
+        { name: 'Plex', ns: 2, id: '9' },
+      ];
+      const $ = id => document.getElementById(id);
+      const store = {
+        get(k, d = '') {
+          try {
+            return localStorage.getItem(k) ?? d;
+          } catch {
+            return d;
+          }
+        },
+        set(k, v) {
+          try {
+            localStorage.setItem(k, v);
+          } catch {}
+        },
+        del(k) {
+          try {
+            localStorage.removeItem(k);
+          } catch {}
+        },
+      };
+      let deviceId = store.get('deviceId');
+      if (!deviceId) {
+        deviceId = (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()) + Math.random();
+        store.set('deviceId', deviceId);
+      }
+      let challenge = null;
+      const base = () => `https://${store.get('ip')}:${PORT}`;
+      const say = (el, text, cls = '') => {
+        el.textContent = text;
+        el.className = 'status ' + cls;
+      };
+      async function tv(path, method = 'GET', body, auth = true) {
+        const headers = { 'Content-Type': 'application/json' };
+        const token = store.get('token');
+        if (auth && token) headers.AUTH = token;
+        let res;
+        try {
+          res = await fetch(base() + path, {
+            method,
+            headers,
+            body: body === undefined ? undefined : JSON.stringify(body),
+          });
+        } catch {
+          throw new Error(
+            "Can't reach the TV. Check you're on home Wi-Fi, the TV is on, and you allowed its certificate (step 1)."
+          );
+        }
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          throw new Error('The TV sent an unexpected reply.');
+        }
+        const r = data?.STATUS?.RESULT;
+        if (r === 'REQUIRES_PAIRING') {
+          store.del('token');
+          show();
+          throw new Error('Pairing expired. Pair again.');
+        }
+        if (r && r.toUpperCase() !== 'SUCCESS') throw new Error('TV: ' + (data.STATUS.DETAIL || r));
+        return data;
+      }
+      function show() {
+        const paired = !!store.get('token') && !!store.get('ip');
+        $('setup').classList.toggle('hidden', paired);
+        $('main').classList.toggle('hidden', !paired);
+        $('tvline').textContent = store.get('ip') ? `TV ${store.get('ip')}` : 'Not connected';
+        $('cert').href = store.get('ip') ? base() + '/' : '#';
+        if (paired) refresh();
+      }
+      async function refresh() {
+        try {
+          const d = await tv('/state/device/power_mode', 'GET', undefined, false);
+          const on = Number(d.ITEMS?.[0]?.VALUE) === 1;
+          $('dot').classList.toggle('on', on);
+          $('pw').textContent = on ? 'On' : 'Standby';
+        } catch {
+          $('dot').classList.remove('on');
+          $('pw').textContent = 'Offline';
+        }
+      }
+      async function key(name) {
+        const [CODESET, CODE] = KEYS[name];
+        return tv('/key_command/', 'PUT', {
+          KEYLIST: [{ CODESET, CODE, ACTION: 'KEYPRESS' }],
+        });
+      }
+      function setIpFromInput() {
+        const v = $('ip').value.trim();
+        if (!/^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d{1,3}(\.\d{1,3}){1,2}$/.test(v))
+          throw new Error('Enter your TV’s home-network IP, like 192.168.4.28');
+        store.set('ip', v);
+        $('cert').href = base() + '/';
+      }
+      $('ip').value = store.get('ip', '192.168.4.28');
+      $('ip').addEventListener('input', () => {
+        try {
+          setIpFromInput();
+        } catch {}
+      });
+      $('cert').addEventListener('click', e => {
+        try {
+          setIpFromInput();
+        } catch (err) {
+          e.preventDefault();
+          say($('setupStatus'), err.message, 'bad');
+        }
+      });
+      $('pairStart').onclick = async () => {
+        try {
+          setIpFromInput();
+          say($('setupStatus'), 'Contacting TV…');
+          const d = await tv(
+            '/pairing/start',
+            'PUT',
+            { DEVICE_ID: deviceId, DEVICE_NAME: 'Our Space Remote' },
+            false
+          );
+          challenge = d.ITEM;
+          $('pinBox').classList.remove('hidden');
+          say($('setupStatus'), 'Enter the PIN now shown at the top of the TV.', 'ok');
+          $('pin').focus();
+        } catch (e) {
+          say($('setupStatus'), e.message, 'bad');
+        }
+      };
+      $('pairFinish').onclick = async () => {
+        try {
+          if (!challenge) throw new Error('Tap “Show PIN on TV” first.');
+          const pin = $('pin').value.trim();
+          if (!/^\d{4,6}$/.test(pin)) throw new Error('Enter the 4–6 digit PIN from the TV.');
+          const d = await tv(
+            '/pairing/pair',
+            'PUT',
+            {
+              DEVICE_ID: deviceId,
+              CHALLENGE_TYPE: challenge.CHALLENGE_TYPE,
+              RESPONSE_VALUE: pin,
+              PAIRING_REQ_TOKEN: challenge.PAIRING_REQ_TOKEN,
+            },
+            false
+          );
+          if (!d.ITEM?.AUTH_TOKEN) throw new Error('The TV did not accept that PIN.');
+          store.set('token', d.ITEM.AUTH_TOKEN);
+          challenge = null;
+          $('pin').value = '';
+          show();
+        } catch (e) {
+          say($('setupStatus'), e.message, 'bad');
+        }
+      };
+      $('launchSpace').onclick = async () => {
+        const url = $('launcherUrl').value.trim();
+        try {
+          if (!/^https?:\/\//i.test(url)) throw new Error('Launcher address must start with https://');
+          say($('status'), 'Sending to TV…');
+          await tv('/app/launch', 'PUT', {
+            VALUE: { APP_ID: '17', NAME_SPACE: 4, MESSAGE: url },
+          });
+          say($('status'), 'Sent. Our Space should open on the TV in a few seconds.', 'ok');
+        } catch (e) {
+          say($('status'), e.message, 'bad');
+        }
+      };
+      document.querySelectorAll('[data-key]').forEach(b => {
+        b.onclick = async () => {
+          try {
+            await key(b.dataset.key);
+            say($('status'), '');
+            if (b.dataset.key.startsWith('pow')) setTimeout(refresh, 2500);
+          } catch (e) {
+            say($('status'), e.message, 'bad');
+          }
+        };
+      });
+      for (const a of APPS) {
+        const b = document.createElement('button');
+        b.textContent = a.name;
+        b.onclick = async () => {
+          try {
+            await tv('/app/launch', 'PUT', {
+              VALUE: { APP_ID: a.id, NAME_SPACE: a.ns, MESSAGE: '' },
+            });
+            say($('status'), `Asked the TV to open ${a.name}.`, 'ok');
+          } catch (e) {
+            say($('status'), e.message, 'bad');
+          }
+        };
+        $('apps').appendChild(b);
+      }
+      $('launcherUrl').value = store.get('launcherUrl', DEFAULT_LAUNCHER);
+      $('saveUrl').onclick = () => {
+        store.set('launcherUrl', $('launcherUrl').value.trim());
+        say($('status'), 'Saved.', 'ok');
+      };
+      $('resetUrl').onclick = () => {
+        store.del('launcherUrl');
+        $('launcherUrl').value = DEFAULT_LAUNCHER;
+        say($('status'), 'Reset to default.', 'ok');
+      };
+      $('forget').onclick = () => {
+        store.del('token');
+        show();
+      };
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && store.get('token')) refresh();
+      });
+      show();
+    </script>
+  </body>
+</html>

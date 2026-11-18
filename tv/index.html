@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Our Space (TV test)</title>
+<style>
+html,body{margin:0;height:100%;background:radial-gradient(120% 80% at 50% -10%,#1b2750,#0b1020 60%);color:#eef2ff;font:28px/1.4 system-ui,sans-serif}
+main{padding:6vh 6vw}h1{font-size:64px;margin:0 0 8px}p{margin:6px 0;color:#9aa6c7}
+.row{margin:14px 0;padding:14px 18px;border-radius:16px;background:rgba(255,255,255,.07)}
+.ok{color:#5ee6a8}.bad{color:#ff7b8a}code{color:#eef2ff}
+</style></head><body><main>
+<h1>Our Space</h1>
+<p>Loaded from the internet. This is the TV-side test page.</p>
+<div class="row">Clock: <code id="t"></code></div>
+<div class="row">Last remote key: <code id="k">press any button</code></div>
+<div class="row">TV API from this page (127.0.0.1): <span id="a">testing…</span></div>
+<div class="row">TV API from this page (<span id="ipl"></span>): <span id="b">testing…</span></div>
+<p>If both tests say blocked, the launcher will need your phone or a helper to open native apps.</p>
+</main>
+<script>
+const ip=new URLSearchParams(location.search).get('ip')||'192.168.4.28';
+document.getElementById('ipl').textContent=ip;
+setInterval(()=>document.getElementById('t').textContent=new Date().toLocaleTimeString(),500);
+addEventListener('keydown',e=>document.getElementById('k').textContent=e.key+' ('+e.keyCode+')');
+async function test(host,el){
+  const c=new AbortController();const to=setTimeout(()=>c.abort(),6000);
+  try{const r=await fetch('https://'+host+':7345/state/device/power_mode',{signal:c.signal});
+    const j=await r.json();el.innerHTML='<span class="ok">reachable ✓ (power_mode '+j.ITEMS[0].VALUE+')</span>';}
+  catch(e){el.innerHTML='<span class="bad">blocked ('+(e.name||'error')+')</span>';}
+  clearTimeout(to);
+}
+test('127.0.0.1',document.getElementById('a'));
+test(ip,document.getElementById('b'));
+</script></body></html>
