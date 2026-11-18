@@ -7,68 +7,163 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Our Space" />
-    <meta name="theme-color" content="#0b1020" />
+    <meta name="theme-color" content="#0a0d1c" />
     <meta name="robots" content="noindex" />
     <title>Our Space Remote</title>
+    <link rel="apple-touch-icon" id="touchIcon" href="" />
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b1020'/%3E%3Ccircle cx='50' cy='50' r='24' fill='none' stroke='%237aa2ff' stroke-width='8'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230a0d1c'/%3E%3Ccircle cx='50' cy='50' r='24' fill='none' stroke='%23b7a8ff' stroke-width='8'/%3E%3C/svg%3E"
     />
     <style>
       :root {
-        --bg: #0b1020;
-        --card: rgba(255, 255, 255, 0.07);
+        --bg: #0a0d1c;
+        --glass: rgba(255, 255, 255, 0.07);
+        --glass-2: rgba(255, 255, 255, 0.12);
         --line: rgba(255, 255, 255, 0.14);
-        --text: #eef2ff;
-        --muted: #9aa6c7;
-        --accent: #7aa2ff;
-        --ok: #5ee6a8;
-        --bad: #ff7b8a;
+        --text: #f1f3ff;
+        --muted: #98a2c6;
+        --accent: #b7a8ff;
+        --accent-2: #7aa7ff;
+        --ok: #62e8ae;
+        --bad: #ff7d8d;
+        --radius: 22px;
       }
       * {
         box-sizing: border-box;
         -webkit-tap-highlight-color: transparent;
       }
-      html,
+      html {
+        background: var(--bg);
+      }
       body {
         margin: 0;
-        background: radial-gradient(120% 80% at 50% -10%, #1b2750 0%, var(--bg) 60%) fixed;
+        min-height: 100vh;
         color: var(--text);
-        font: 16px/1.4 -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
-        min-height: 100%;
+        font: 16px/1.4 -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+        overscroll-behavior-y: none;
+      }
+      /* Slowly drifting aurora behind everything */
+      .aurora {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        overflow: hidden;
+        background: var(--bg);
+      }
+      .aurora i {
+        position: absolute;
+        width: 70vmax;
+        height: 70vmax;
+        border-radius: 50%;
+        filter: blur(70px);
+        opacity: 0.55;
+        animation: drift 26s ease-in-out infinite alternate;
+      }
+      .aurora i:nth-child(1) {
+        background: radial-gradient(circle, #5d4bd6 0%, transparent 65%);
+        top: -30vmax;
+        left: -25vmax;
+      }
+      .aurora i:nth-child(2) {
+        background: radial-gradient(circle, #1f7fd1 0%, transparent 65%);
+        bottom: -35vmax;
+        right: -30vmax;
+        animation-duration: 34s;
+        animation-delay: -8s;
+      }
+      .aurora i:nth-child(3) {
+        background: radial-gradient(circle, #d65fa7 0%, transparent 65%);
+        top: 35%;
+        left: 40%;
+        opacity: 0.25;
+        animation-duration: 40s;
+      }
+      @keyframes drift {
+        to {
+          transform: translate3d(8vmax, 6vmax, 0) scale(1.15);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .aurora i {
+          animation: none;
+        }
       }
       main {
-        max-width: 440px;
+        max-width: 460px;
         margin: 0 auto;
-        padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+        padding: max(14px, env(safe-area-inset-top)) 16px calc(96px + env(safe-area-inset-bottom));
         display: grid;
         gap: 14px;
-      }
-      h1 {
-        font-size: 20px;
-        margin: 6px 2px 0;
-        font-weight: 650;
-        letter-spacing: 0.2px;
-      }
-      .sub {
-        color: var(--muted);
-        font-size: 13px;
-        margin: 0 2px;
-      }
-      .card {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 20px;
-        padding: 16px;
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
       }
       .hidden {
         display: none !important;
       }
+      /* header */
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 2px 2px;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: -0.4px;
+        font-weight: 700;
+      }
+      header p {
+        margin: 2px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+        border-radius: 999px;
+        background: var(--glass);
+        border: 1px solid var(--line);
+        color: var(--muted);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #6b7090;
+      }
+      .dot.on {
+        background: var(--ok);
+        box-shadow: 0 0 10px var(--ok);
+      }
+      /* glass cards */
+      .card {
+        background: var(--glass);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 16px;
+        backdrop-filter: blur(22px) saturate(140%);
+        -webkit-backdrop-filter: blur(22px) saturate(140%);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+      .card h2 {
+        margin: 0 0 12px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.9px;
+      }
       button,
       input,
+      select,
       a.btn {
         font: inherit;
         color: inherit;
@@ -76,55 +171,106 @@
       button,
       a.btn {
         appearance: none;
+        -webkit-appearance: none;
         border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.09);
-        border-radius: 14px;
+        background: var(--glass-2);
+        border-radius: 16px;
         padding: 12px 14px;
-        min-height: 48px;
-        text-align: center;
-        text-decoration: none;
+        min-height: 50px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 8px;
+        text-decoration: none;
         cursor: pointer;
         transition:
-          transform 0.08s,
-          background 0.15s;
+          transform 0.1s ease,
+          background 0.2s ease,
+          box-shadow 0.2s ease;
       }
       button:active,
       a.btn:active {
-        transform: scale(0.96);
-        background: rgba(255, 255, 255, 0.18);
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.22);
       }
       button:disabled {
         opacity: 0.45;
       }
-      .primary {
-        background: linear-gradient(135deg, #5b86ff, #9b7bff);
+      svg {
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: none;
+      }
+      /* hero launch button */
+      .hero {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        min-height: 92px;
         border: 0;
-        font-weight: 650;
-        font-size: 18px;
-        min-height: 64px;
-        width: 100%;
-        border-radius: 18px;
-        box-shadow: 0 10px 30px rgba(91, 134, 255, 0.35);
+        border-radius: 26px;
+        padding: 18px 20px;
+        justify-content: flex-start;
+        text-align: left;
+        gap: 16px;
+        background: linear-gradient(135deg, #6a5cff 0%, #9a6bff 45%, #e06ab3 100%);
+        box-shadow:
+          0 18px 50px rgba(122, 92, 255, 0.45),
+          inset 0 1px 0 rgba(255, 255, 255, 0.35);
       }
-      input {
-        width: 100%;
-        padding: 12px 14px;
-        border-radius: 12px;
-        border: 1px solid var(--line);
-        background: rgba(0, 0, 0, 0.3);
-        font-size: 17px;
+      .hero::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.28) 50%, transparent 70%);
+        transform: translateX(-120%);
+        animation: sheen 5s ease-in-out infinite;
       }
-      label {
+      @keyframes sheen {
+        55%,
+        100% {
+          transform: translateX(120%);
+        }
+      }
+      .hero .ic {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.22);
+        display: grid;
+        place-items: center;
+      }
+      .hero .ic svg {
+        width: 28px;
+        height: 28px;
+      }
+      .hero b {
         display: block;
-        color: var(--muted);
-        font-size: 12px;
-        margin: 10px 0 6px;
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
+        font-size: 19px;
+        letter-spacing: -0.2px;
       }
+      .hero small {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 13px;
+      }
+      .status {
+        min-height: 20px;
+        margin: -4px 4px 0;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .status.ok {
+        color: var(--ok);
+      }
+      .status.bad {
+        color: var(--bad);
+      }
+      /* grids */
       .row {
         display: grid;
         gap: 10px;
@@ -135,402 +281,859 @@
       .row.three {
         grid-template-columns: repeat(3, 1fr);
       }
-      .step {
-        display: grid;
-        gap: 8px;
-        margin-top: 12px;
+      .row.four {
+        grid-template-columns: repeat(4, 1fr);
       }
-      .step b {
-        font-size: 14px;
-      }
-      .status {
-        font-size: 14px;
-        min-height: 20px;
-        margin: 2px 2px 0;
-        color: var(--muted);
-      }
-      .status.ok {
+      .power-on {
         color: var(--ok);
       }
-      .status.bad {
+      .power-off {
         color: var(--bad);
       }
-      .pill {
-        display: inline-flex;
-        gap: 8px;
-        align-items: center;
-        font-size: 13px;
-        color: var(--muted);
-      }
-      .dot {
-        width: 9px;
-        height: 9px;
+      /* round directional pad */
+      .pad {
+        position: relative;
+        width: min(78vw, 290px);
+        aspect-ratio: 1;
+        margin: 4px auto 14px;
         border-radius: 50%;
-        background: #666;
+        background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+        border: 1px solid var(--line);
+        box-shadow:
+          inset 0 2px 0 rgba(255, 255, 255, 0.12),
+          0 14px 40px rgba(0, 0, 0, 0.35);
       }
-      .dot.on {
-        background: var(--ok);
+      .pad button {
+        position: absolute;
+        border: 0;
+        background: transparent;
+        border-radius: 50%;
+        width: 33%;
+        height: 33%;
+        min-height: 0;
+        padding: 0;
+        font-size: 0;
       }
-      .dpad {
+      .pad button:active {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .pad svg {
+        width: 26px;
+        height: 26px;
+      }
+      .pad .u {
+        top: 5%;
+        left: 33.5%;
+      }
+      .pad .d {
+        bottom: 5%;
+        left: 33.5%;
+      }
+      .pad .l {
+        left: 5%;
+        top: 33.5%;
+      }
+      .pad .r {
+        right: 5%;
+        top: 33.5%;
+      }
+      .pad .ok {
+        left: 33.5%;
+        top: 33.5%;
+        width: 33%;
+        height: 33%;
+        font-size: 17px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        background: linear-gradient(135deg, rgba(122, 167, 255, 0.55), rgba(183, 168, 255, 0.55));
+        border: 1px solid rgba(255, 255, 255, 0.25);
+      }
+      /* volume rocker */
+      .vol {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+      }
+      /* app tiles */
+      .tile {
+        flex-direction: column;
+        gap: 6px;
+        min-height: 78px;
+        font-size: 13px;
+        font-weight: 600;
+        border: 0;
+        color: #fff;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      }
+      .tile b {
+        font-size: 20px;
+      }
+      /* bottom tab bar */
+      nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 8px 14px calc(8px + env(safe-area-inset-bottom));
+        background: rgba(10, 13, 28, 0.72);
+        backdrop-filter: blur(24px) saturate(160%);
+        -webkit-backdrop-filter: blur(24px) saturate(160%);
+        border-top: 1px solid var(--line);
+      }
+      nav div {
+        max-width: 460px;
+        margin: 0 auto;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-        max-width: 300px;
-        margin: 0 auto;
+        gap: 6px;
       }
-      .dpad button {
-        min-height: 62px;
-        font-size: 22px;
+      nav button {
+        flex-direction: column;
+        gap: 3px;
+        min-height: 54px;
+        font-size: 11px;
+        background: transparent;
+        border: 0;
+        color: var(--muted);
+        border-radius: 14px;
       }
-      .dpad .ok {
-        background: rgba(122, 162, 255, 0.28);
-        font-weight: 650;
-        font-size: 16px;
+      nav button.active {
+        color: var(--text);
+        background: var(--glass-2);
       }
-      small {
+      nav button.active svg {
+        stroke: var(--accent);
+      }
+      /* forms */
+      label.f {
+        display: block;
+        margin: 14px 0 6px;
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+      }
+      label.f:first-child {
+        margin-top: 0;
+      }
+      input[type='text'],
+      input[type='url'],
+      input[type='search'],
+      input[inputmode] {
+        width: 100%;
+        padding: 13px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.28);
+        font-size: 17px;
+        outline: none;
+      }
+      input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(183, 168, 255, 0.2);
+      }
+      input[type='range'] {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+      input[type='color'] {
+        width: 52px;
+        height: 44px;
+        padding: 2px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.28);
+      }
+      .seg {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        background: rgba(0, 0, 0, 0.28);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 3px;
+        gap: 3px;
+      }
+      .seg button {
+        min-height: 40px;
+        border: 0;
+        background: transparent;
+        border-radius: 11px;
+        font-size: 14px;
         color: var(--muted);
       }
-      .head {
+      .seg button.on {
+        background: var(--glass-2);
+        color: var(--text);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      }
+      .switch {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        padding: 12px 0;
+        border-top: 1px solid var(--line);
+      }
+      .switch:first-of-type {
+        border-top: 0;
+      }
+      .switch input {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 52px;
+        height: 32px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.18);
+        position: relative;
+        transition: background 0.2s;
+        flex: none;
+      }
+      .switch input::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #fff;
+        transition: transform 0.2s;
+      }
+      .switch input:checked {
+        background: var(--ok);
+      }
+      .switch input:checked::after {
+        transform: translateX(20px);
+      }
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .swatch {
+        height: 62px;
+        min-height: 0;
+        padding: 0;
+        border-radius: 16px;
+        align-items: flex-end;
+        justify-content: flex-start;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+        padding: 0 9px 8px;
+        border: 2px solid transparent;
+        position: relative;
+      }
+      .swatch.on {
+        border-color: #fff;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.22);
+      }
+      .colors {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .c {
+        width: 38px;
+        height: 38px;
+        min-height: 0;
+        border-radius: 50%;
+        padding: 0;
+        border: 2px solid transparent;
+      }
+      .c.on {
+        border-color: #fff;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+      }
+      small.note {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 8px;
       }
       .link {
         background: none;
         border: 0;
         min-height: 0;
-        padding: 4px 2px;
+        padding: 8px;
         color: var(--muted);
-        font-size: 13px;
+        font-size: 14px;
         text-decoration: underline;
+      }
+      .step {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      /* live TV preview */
+      .tv {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+        transition: background 0.4s;
+      }
+      .tv .dim {
+        position: absolute;
+        inset: 0;
+        background: #000;
+        pointer-events: none;
+      }
+      .tv .in {
+        position: absolute;
+        inset: 0;
+        padding: 6% 7%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .tv .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        font-size: 10px;
+        opacity: 0.9;
+      }
+      .tv .brand {
+        font-weight: 700;
+        letter-spacing: 0.3px;
+      }
+      .tv .big {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        line-height: 1.1;
+      }
+      .tv .sm {
+        font-size: 10px;
+        opacity: 0.8;
+        margin-top: 4px;
+      }
+      .tv .tiles {
+        display: flex;
+        gap: 6px;
+      }
+      .tv .tiles span {
+        flex: 1;
+        height: 26px;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(6px);
+      }
+      .tv .tiles span:first-child {
+        background: var(--pv-accent, #b7a8ff);
+        opacity: 0.85;
+      }
+      .t-alpine {
+        background: linear-gradient(165deg, #2b2358 0%, #5a4a9a 45%, #c79bd1 100%);
+      }
+      .t-aurora {
+        background: radial-gradient(120% 90% at 20% 100%, #1fd1a3 0%, transparent 55%), linear-gradient(180deg, #06142a, #0b2a3d);
+      }
+      .t-dunes {
+        background: linear-gradient(170deg, #3b2a2a 0%, #b9794b 55%, #f1c397 100%);
+      }
+      .t-ocean {
+        background: linear-gradient(170deg, #07162e 0%, #0d4a7a 55%, #4cb3d6 100%);
+      }
+      .t-cosmos {
+        background: radial-gradient(90% 80% at 70% 20%, #3a3f9e 0%, transparent 60%), linear-gradient(180deg, #05060f, #14183a);
+      }
+      .t-video {
+        background: radial-gradient(70% 60% at 50% 100%, #ff9a3c 0%, #b8431a 35%, transparent 70%), linear-gradient(180deg, #120a08, #2a120a);
       }
     </style>
   </head>
   <body>
+    <div class="aurora"><i></i><i></i><i></i></div>
+
     <main>
-      <div class="head">
+      <header>
         <div>
-          <h1>Our Space Remote</h1>
-          <p class="sub" id="tvline">Not connected</p>
+          <h1>Our Space</h1>
+          <p id="tvline">Not connected</p>
         </div>
         <span class="pill"><span class="dot" id="dot"></span><span id="pw">TV</span></span>
-      </div>
+      </header>
 
-      <!-- Setup / pairing -->
+      <!-- ============ SETUP ============ -->
       <section class="card" id="setup">
-        <b>Connect to your TV</b>
-        <small
-          ><br />Use this on your home Wi-Fi, with the TV on. You only do this once per
-          phone.</small
-        >
-        <label for="ip">TV address</label>
-        <input id="ip" inputmode="decimal" autocomplete="off" placeholder="192.168.4.28" />
+        <h2>Connect to your TV</h2>
+        <p style="margin: 0 0 4px; color: var(--muted); font-size: 14px">
+          Use your home Wi-Fi, with the TV on. You only do this once per phone.
+        </p>
+        <label class="f" for="ip">TV address</label>
+        <input id="ip" type="text" inputmode="decimal" autocomplete="off" placeholder="192.168.4.28" />
         <div class="step">
-          <b>1. Allow the TV's certificate</b>
-          <small
-            >Safari shows a warning. Tap Show Details, then visit the website. You will then see a page that says
+          <b>1 · Allow the TV’s certificate</b>
+          <small class="note" style="margin: 0"
+            >Safari shows a warning. Tap Show Details, then visit the website. You will then see
             “Unhandled Exception.” That is normal and means it worked. Come back here.</small
           >
           <a class="btn" id="cert" target="_blank" rel="noopener">Open TV certificate page</a>
         </div>
         <div class="step">
-          <b>2. Pair</b>
+          <b>2 · Pair</b>
           <button id="pairStart">Show PIN on TV</button>
           <div id="pinBox" class="hidden row">
-            <input id="pin" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="PIN from TV" />
-            <button id="pairFinish">Pair</button>
+            <input id="pin" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="PIN from the TV" />
+            <button id="pairFinish" class="hero" style="min-height: 56px; border-radius: 16px; font-weight: 700; justify-content: center">Pair</button>
           </div>
         </div>
-        <p class="status" id="setupStatus"></p>
+        <p class="status" id="setupStatus" style="margin-top: 12px"></p>
       </section>
 
-      <!-- Main remote -->
-      <section id="main" class="hidden" style="display: contents">
-        <button class="primary" id="launchSpace">Open Our Space on TV</button>
+      <!-- ============ REMOTE TAB ============ -->
+      <section id="tab-remote" class="hidden" style="display: contents">
+        <button class="hero" id="launchSpace">
+          <span class="ic"
+            ><svg viewBox="0 0 24 24"><path d="M5 4.5v15l14-7.5z" /></svg
+          ></span>
+          <span
+            ><b id="heroTitle">Open Our Space</b><small>Show your home screen on the TV</small></span
+          >
+        </button>
         <p class="status" id="status"></p>
 
         <div class="card">
           <div class="row three">
-            <button data-key="powon">Power on</button>
-            <button data-key="powoff">Power off</button>
-            <button data-key="input">Input</button>
+            <button data-key="powon" class="power-on">
+              <svg viewBox="0 0 24 24"><path d="M12 3v8M6.3 7a8 8 0 1 0 11.4 0" /></svg>On
+            </button>
+            <button data-key="powoff" class="power-off">
+              <svg viewBox="0 0 24 24"><path d="M12 3v8M6.3 7a8 8 0 1 0 11.4 0" /></svg>Off
+            </button>
+            <button data-key="input">
+              <svg viewBox="0 0 24 24"><path d="M4 7h12M4 7l3-3M4 7l3 3M20 17H8m12 0-3-3m3 3-3 3" /></svg>Input
+            </button>
           </div>
         </div>
 
         <div class="card">
-          <div class="dpad">
-            <button data-key="home">⌂</button>
-            <button data-key="up">▲</button>
-            <button data-key="menu">☰</button>
-            <button data-key="left">◀</button>
+          <div class="pad">
+            <button class="u" data-key="up" aria-label="Up"><svg viewBox="0 0 24 24"><path d="m6 15 6-6 6 6" /></svg></button>
+            <button class="l" data-key="left" aria-label="Left"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6" /></svg></button>
             <button class="ok" data-key="ok">OK</button>
-            <button data-key="right">▶</button>
-            <button data-key="back">↩</button>
-            <button data-key="down">▼</button>
-            <button data-key="info">i</button>
+            <button class="r" data-key="right" aria-label="Right"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" /></svg></button>
+            <button class="d" data-key="down" aria-label="Down"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg></button>
           </div>
-          <div class="row three" style="margin-top: 12px">
-            <button data-key="vold">Vol −</button>
-            <button data-key="mute">Mute</button>
-            <button data-key="volu">Vol +</button>
+          <div class="row four">
+            <button data-key="back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3" /></svg></button>
+            <button data-key="home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8M5 10v10h5v-6h4v6h5V10" /></svg></button>
+            <button data-key="menu" aria-label="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button>
+            <button data-key="info" aria-label="Info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg></button>
           </div>
         </div>
 
         <div class="card">
-          <b>Apps</b>
-          <div class="row two" id="apps" style="margin-top: 10px"></div>
-          <small style="display: block; margin-top: 8px"
-            >App IDs are community-documented and may not match every firmware.</small
-          >
+          <h2>Volume</h2>
+          <div class="vol">
+            <button data-key="vold" aria-label="Volume down"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM17 10a3 3 0 0 1 0 4" /></svg></button>
+            <button data-key="mute" aria-label="Mute"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM17 9l4 6m0-6-4 6" /></svg></button>
+            <button data-key="volu" aria-label="Volume up"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM17 9a5 5 0 0 1 0 6M19.5 6.5a9 9 0 0 1 0 11" /></svg></button>
+          </div>
         </div>
 
         <div class="card">
-          <label for="launcherUrl" style="margin-top: 0">Launcher page the TV loads</label>
-          <input id="launcherUrl" inputmode="url" autocapitalize="off" autocorrect="off" />
+          <h2>Apps</h2>
+          <div class="row two" id="apps"></div>
+          <small class="note">Opens the TV’s built-in app. App IDs may differ on some firmware.</small>
+        </div>
+      </section>
+
+      <!-- ============ CUSTOMIZE TAB ============ -->
+      <section id="tab-custom" class="hidden" style="display: contents">
+        <div class="tv t-alpine" id="pv" style="--pv-accent: #b7a8ff">
+          <div class="in" id="pvIn">
+            <div class="top">
+              <span class="brand" id="pvName">Our Space</span>
+              <span id="pvClock">7:42 PM</span>
+            </div>
+            <div>
+              <div class="big" id="pvHello">Good evening,<br />everyone</div>
+              <div class="sm" id="pvSub">Living room</div>
+            </div>
+            <div class="tiles"><span></span><span></span><span></span><span></span></div>
+          </div>
+          <div class="dim" id="pvDim" style="opacity: 0.35"></div>
+        </div>
+
+        <div class="card">
+          <h2>Home screen</h2>
+          <label class="f" for="cName">Launcher name</label>
+          <input id="cName" type="text" maxlength="40" autocomplete="off" />
+          <label class="f" for="cHello">Greeting name</label>
+          <input id="cHello" type="text" maxlength="40" autocomplete="off" />
+          <label class="f" for="cRoom">Room</label>
+          <input id="cRoom" type="text" maxlength="40" autocomplete="off" />
+        </div>
+
+        <div class="card">
+          <h2>Background</h2>
+          <div class="swatches" id="themes"></div>
+          <label class="f" for="cDim">Dimming <span id="dimv"></span></label>
+          <input id="cDim" type="range" min="0" max="80" step="5" />
+          <label class="f" for="cVideo">Looping video (optional)</label>
+          <input id="cVideo" type="url" inputmode="url" autocapitalize="off" autocorrect="off" placeholder="https://… .mp4" />
+          <button id="useFire" style="width: 100%; margin-top: 10px">🔥 Use the fireplace video</button>
+          <small class="note">Or paste a direct link to an H.264 MP4 or WebM. It streams to the TV; nothing is uploaded.</small>
+        </div>
+
+        <div class="card">
+          <h2>Style</h2>
+          <label class="f">Accent color</label>
+          <div class="colors" id="accents"></div>
+          <label class="f">Visual effects</label>
+          <div class="seg" id="effects">
+            <button data-v="off">Off</button><button data-v="balanced">Balanced</button><button data-v="rich">Rich</button>
+          </div>
+          <label class="switch" style="margin-top: 8px"><span>Compact layout</span><input type="checkbox" id="cCompact" /></label>
+          <label class="switch"><span>Show recently opened</span><input type="checkbox" id="cRecent" /></label>
+          <label class="switch"><span>24-hour clock</span><input type="checkbox" id="cClock" /></label>
+        </div>
+
+        <div class="card">
+          <h2>Weather</h2>
+          <label class="switch"><span>Show weather</span><input type="checkbox" id="cWx" /></label>
+          <label class="f" for="cLoc">ZIP code, or city and state</label>
+          <input id="cLoc" type="text" maxlength="80" autocomplete="off" placeholder="e.g. 90210 or Austin, TX" />
+          <label class="f">Units</label>
+          <div class="seg" id="units"><button data-v="fahrenheit">°F</button><button data-v="celsius">°C</button></div>
+          <small class="note">Your location is only stored on this phone and the TV.</small>
+        </div>
+
+        <button class="hero" id="applyTv" style="min-height: 72px">
+          <span class="ic"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg></span>
+          <span><b>Save &amp; show on TV</b><small>Reopens Our Space with these settings</small></span>
+        </button>
+        <p class="status" id="cStatus"></p>
+        <button class="link" id="resetCfg" style="justify-self: center">Reset to defaults</button>
+      </section>
+
+      <!-- ============ SETTINGS TAB ============ -->
+      <section id="tab-settings" class="hidden" style="display: contents">
+        <div class="card">
+          <h2>Your TV</h2>
+          <div class="row">
+            <div style="display: flex; justify-content: space-between"><span style="color: var(--muted)">Address</span><b id="sIp">—</b></div>
+            <div style="display: flex; justify-content: space-between"><span style="color: var(--muted)">Pairing</span><b id="sPair" class="power-on">Paired</b></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Launcher page the TV loads</h2>
+          <input id="launcherUrl" type="url" inputmode="url" autocapitalize="off" autocorrect="off" />
           <div class="row two" style="margin-top: 10px">
             <button id="saveUrl">Save</button>
             <button id="resetUrl">Reset</button>
           </div>
         </div>
-
-        <button class="link" id="forget">Forget this TV / pair again</button>
+        <button class="link" id="forget" style="justify-self: center">Forget this TV and pair again</button>
       </section>
     </main>
+
+    <nav id="tabs" class="hidden">
+      <div>
+        <button data-tab="remote" class="active">
+          <svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="5" /><circle cx="12" cy="9" r="1.6" /><path d="M12 14v3" /></svg>Remote
+        </button>
+        <button data-tab="custom">
+          <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>Customize
+        </button>
+        <button data-tab="settings">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" /></svg>Setup
+        </button>
+      </div>
+    </nav>
 
     <script>
       'use strict';
       const PORT = 7345;
       const DEFAULT_LAUNCHER = 'https://kryan19k.github.io/our-space-tv/tv/';
+      const FIREPLACE = 'https://kryan19k.github.io/our-space-tv/videos/fireplace.mp4';
       const KEYS = {
-        up: [3, 8],
-        down: [3, 0],
-        left: [3, 1],
-        right: [3, 7],
-        ok: [3, 2],
-        back: [4, 0],
-        menu: [4, 8],
-        home: [4, 15],
-        info: [4, 6],
-        input: [7, 1],
-        vold: [5, 0],
-        volu: [5, 1],
-        mute: [5, 4],
-        powoff: [11, 0],
-        powon: [11, 1],
+        up: [3, 8], down: [3, 0], left: [3, 1], right: [3, 7], ok: [3, 2],
+        back: [4, 0], menu: [4, 8], home: [4, 15], info: [4, 6], input: [7, 1],
+        vold: [5, 0], volu: [5, 1], mute: [5, 4], powoff: [11, 0], powon: [11, 1],
       };
       const APPS = [
-        { name: 'Netflix', ns: 3, id: '1' },
-        { name: 'Prime Video', ns: 2, id: '4' },
-        { name: 'Hulu', ns: 2, id: '3' },
-        { name: 'Plex', ns: 2, id: '9' },
+        { name: 'Netflix', ns: 3, id: '1', c: 'linear-gradient(135deg,#e50914,#8f0710)', m: 'N' },
+        { name: 'Prime Video', ns: 2, id: '4', c: 'linear-gradient(135deg,#1aa7ff,#0b5fa8)', m: 'prime' },
+        { name: 'Hulu', ns: 2, id: '3', c: 'linear-gradient(135deg,#1ce783,#0b8a4b)', m: 'hulu' },
+        { name: 'Plex', ns: 2, id: '9', c: 'linear-gradient(135deg,#e5ad38,#9a6a10)', m: 'plex' },
       ];
+      const THEMES = [
+        ['alpine', 'Alpine dusk', '#c9c3ff'],
+        ['aurora', 'Northern lights', '#83ead1'],
+        ['dunes', 'Desert glow', '#f1c397'],
+        ['ocean', 'Blue hour', '#9cdbf0'],
+        ['cosmos', 'Deep space', '#b4bfff'],
+        ['video', 'Looping video', '#f1c397'],
+      ];
+      const ACCENTS = ['#c9c3ff', '#83ead1', '#f1c397', '#9cdbf0', '#ff9ec7', '#ffd36e'];
+      const DEFAULT_CFG = {
+        name: 'everyone', launcherName: 'Our Space', room: 'Living room', accent: '#f1c397',
+        background: 'video', backgroundVideo: FIREPLACE, effects: 'balanced', dimming: 25,
+        weatherEnabled: false, weatherLocation: '', units: 'fahrenheit',
+        clock24: false, showRecent: true, compact: false,
+      };
       const $ = id => document.getElementById(id);
       const store = {
-        get(k, d = '') {
-          try {
-            return localStorage.getItem(k) ?? d;
-          } catch {
-            return d;
-          }
-        },
-        set(k, v) {
-          try {
-            localStorage.setItem(k, v);
-          } catch {}
-        },
-        del(k) {
-          try {
-            localStorage.removeItem(k);
-          } catch {}
-        },
+        get(k, d = '') { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
+        set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+        del(k) { try { localStorage.removeItem(k); } catch {} },
       };
       let deviceId = store.get('deviceId');
       if (!deviceId) {
         deviceId = (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()) + Math.random();
         store.set('deviceId', deviceId);
       }
+      let cfg = { ...DEFAULT_CFG };
+      try { cfg = { ...DEFAULT_CFG, ...JSON.parse(store.get('cfg.v1', '{}')) }; } catch {}
       let challenge = null;
       const base = () => `https://${store.get('ip')}:${PORT}`;
-      const say = (el, text, cls = '') => {
-        el.textContent = text;
-        el.className = 'status ' + cls;
-      };
+      const say = (el, text, cls = '') => { el.textContent = text; el.className = 'status ' + cls; };
+      const buzz = () => { try { navigator.vibrate && navigator.vibrate(8); } catch {} };
+
+      /* ---------- app icon for Home Screen ---------- */
+      (function icon() {
+        try {
+          const c = document.createElement('canvas'); c.width = c.height = 180;
+          const x = c.getContext('2d');
+          const g = x.createLinearGradient(0, 0, 180, 180);
+          g.addColorStop(0, '#5d4bd6'); g.addColorStop(1, '#d65fa7');
+          x.fillStyle = g; x.fillRect(0, 0, 180, 180);
+          x.strokeStyle = '#fff'; x.lineWidth = 14; x.beginPath(); x.arc(90, 90, 42, 0, 7); x.stroke();
+          x.fillStyle = '#fff'; x.beginPath(); x.arc(90, 90, 12, 0, 7); x.fill();
+          $('touchIcon').href = c.toDataURL('image/png');
+        } catch {}
+      })();
+
+      /* ---------- TV API ---------- */
       async function tv(path, method = 'GET', body, auth = true) {
         const headers = { 'Content-Type': 'application/json' };
         const token = store.get('token');
         if (auth && token) headers.AUTH = token;
         let res;
         try {
-          res = await fetch(base() + path, {
-            method,
-            headers,
-            body: body === undefined ? undefined : JSON.stringify(body),
-          });
+          res = await fetch(base() + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
         } catch {
-          throw new Error(
-            "Can't reach the TV. Check you're on home Wi-Fi, the TV is on, and you allowed its certificate (step 1)."
-          );
+          throw new Error("Can't reach the TV. Check you're on home Wi-Fi, the TV is on, and you allowed its certificate.");
         }
         let data;
-        try {
-          data = await res.json();
-        } catch {
-          throw new Error('The TV sent an unexpected reply.');
-        }
-        const r = data?.STATUS?.RESULT;
-        if (r === 'REQUIRES_PAIRING') {
-          store.del('token');
-          show();
-          throw new Error('Pairing expired. Pair again.');
-        }
+        try { data = await res.json(); } catch { throw new Error('The TV sent an unexpected reply.'); }
+        const r = data && data.STATUS && data.STATUS.RESULT;
+        if (r === 'REQUIRES_PAIRING') { store.del('token'); show(); throw new Error('Pairing expired. Pair again.'); }
         if (r && r.toUpperCase() !== 'SUCCESS') throw new Error('TV: ' + (data.STATUS.DETAIL || r));
         return data;
       }
-      function show() {
-        const paired = !!store.get('token') && !!store.get('ip');
-        $('setup').classList.toggle('hidden', paired);
-        $('main').classList.toggle('hidden', !paired);
-        $('tvline').textContent = store.get('ip') ? `TV ${store.get('ip')}` : 'Not connected';
-        $('cert').href = store.get('ip') ? base() + '/' : '#';
-        if (paired) refresh();
-      }
+      const key = name => {
+        const [CODESET, CODE] = KEYS[name];
+        return tv('/key_command/', 'PUT', { KEYLIST: [{ CODESET, CODE, ACTION: 'KEYPRESS' }] });
+      };
       async function refresh() {
         try {
           const d = await tv('/state/device/power_mode', 'GET', undefined, false);
-          const on = Number(d.ITEMS?.[0]?.VALUE) === 1;
+          const on = Number(d.ITEMS && d.ITEMS[0] && d.ITEMS[0].VALUE) === 1;
           $('dot').classList.toggle('on', on);
-          $('pw').textContent = on ? 'On' : 'Standby';
+          $('pw').textContent = on ? 'TV on' : 'Standby';
         } catch {
           $('dot').classList.remove('on');
           $('pw').textContent = 'Offline';
         }
       }
-      async function key(name) {
-        const [CODESET, CODE] = KEYS[name];
-        return tv('/key_command/', 'PUT', {
-          KEYLIST: [{ CODESET, CODE, ACTION: 'KEYPRESS' }],
-        });
+
+      /* ---------- launch URL (settings + pairing handed to the TV) ---------- */
+      function b64url(obj) {
+        const bytes = new TextEncoder().encode(JSON.stringify(obj));
+        let s = ''; bytes.forEach(b => (s += String.fromCharCode(b)));
+        return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
       }
+      function launchUrl() {
+        const page = ($('launcherUrl').value || DEFAULT_LAUNCHER).trim();
+        if (!/^https?:\/\//i.test(page)) throw new Error('Launcher address must start with https://');
+        const u = new URL(page);
+        u.searchParams.set('tv', '1');
+        u.searchParams.set('v', String(Date.now()));
+        const hash = new URLSearchParams({ ip: store.get('ip'), t: store.get('token'), d: deviceId, cfg: b64url(cfg) });
+        return u.href + '#' + hash.toString();
+      }
+      async function openOnTv(statusEl, okText) {
+        try {
+          say(statusEl, 'Sending to TV…');
+          await tv('/app/launch', 'PUT', { VALUE: { APP_ID: '17', NAME_SPACE: 4, MESSAGE: launchUrl() } });
+          say(statusEl, okText, 'ok');
+          buzz();
+        } catch (e) { say(statusEl, e.message, 'bad'); }
+      }
+
+      /* ---------- tabs & state ---------- */
+      let currentTab = store.get('tab', 'remote');
+      function setTab(t) {
+        currentTab = t; store.set('tab', t);
+        ['remote', 'custom', 'settings'].forEach(n => $('tab-' + n).classList.toggle('hidden', n !== t));
+        document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+        window.scrollTo(0, 0);
+      }
+      function show() {
+        const paired = !!store.get('token') && !!store.get('ip');
+        $('setup').classList.toggle('hidden', paired);
+        $('tabs').classList.toggle('hidden', !paired);
+        ['remote', 'custom', 'settings'].forEach(n => $('tab-' + n).classList.add('hidden'));
+        if (paired) setTab(currentTab);
+        $('tvline').textContent = store.get('ip') ? `TV ${store.get('ip')}` : 'Not connected';
+        $('sIp').textContent = store.get('ip') || '—';
+        $('cert').href = store.get('ip') ? base() + '/' : '#';
+        if (paired) refresh();
+      }
+      document.querySelectorAll('nav button').forEach(b => (b.onclick = () => setTab(b.dataset.tab)));
+
+      /* ---------- setup / pairing ---------- */
       function setIpFromInput() {
         const v = $('ip').value.trim();
         if (!/^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d{1,3}(\.\d{1,3}){1,2}$/.test(v))
           throw new Error('Enter your TV’s home-network IP, like 192.168.4.28');
-        store.set('ip', v);
-        $('cert').href = base() + '/';
+        store.set('ip', v); $('cert').href = base() + '/';
       }
       $('ip').value = store.get('ip', '192.168.4.28');
-      $('ip').addEventListener('input', () => {
-        try {
-          setIpFromInput();
-        } catch {}
-      });
+      $('ip').addEventListener('input', () => { try { setIpFromInput(); } catch {} });
       $('cert').addEventListener('click', e => {
-        try {
-          setIpFromInput();
-        } catch (err) {
-          e.preventDefault();
-          say($('setupStatus'), err.message, 'bad');
-        }
+        try { setIpFromInput(); } catch (err) { e.preventDefault(); say($('setupStatus'), err.message, 'bad'); }
       });
       $('pairStart').onclick = async () => {
         try {
-          setIpFromInput();
-          say($('setupStatus'), 'Contacting TV…');
-          const d = await tv(
-            '/pairing/start',
-            'PUT',
-            { DEVICE_ID: deviceId, DEVICE_NAME: 'Our Space Remote' },
-            false
-          );
-          challenge = d.ITEM;
-          $('pinBox').classList.remove('hidden');
-          say($('setupStatus'), 'Enter the PIN now shown at the top of the TV.', 'ok');
-          $('pin').focus();
-        } catch (e) {
-          say($('setupStatus'), e.message, 'bad');
-        }
+          setIpFromInput(); say($('setupStatus'), 'Contacting TV…');
+          const d = await tv('/pairing/start', 'PUT', { DEVICE_ID: deviceId, DEVICE_NAME: 'Our Space Remote' }, false);
+          challenge = d.ITEM; $('pinBox').classList.remove('hidden');
+          say($('setupStatus'), 'Enter the PIN now shown at the top of the TV.', 'ok'); $('pin').focus();
+        } catch (e) { say($('setupStatus'), e.message, 'bad'); }
       };
       $('pairFinish').onclick = async () => {
         try {
           if (!challenge) throw new Error('Tap “Show PIN on TV” first.');
           const pin = $('pin').value.trim();
           if (!/^\d{4,6}$/.test(pin)) throw new Error('Enter the 4–6 digit PIN from the TV.');
-          const d = await tv(
-            '/pairing/pair',
-            'PUT',
-            {
-              DEVICE_ID: deviceId,
-              CHALLENGE_TYPE: challenge.CHALLENGE_TYPE,
-              RESPONSE_VALUE: pin,
-              PAIRING_REQ_TOKEN: challenge.PAIRING_REQ_TOKEN,
-            },
-            false
-          );
-          if (!d.ITEM?.AUTH_TOKEN) throw new Error('The TV did not accept that PIN.');
-          store.set('token', d.ITEM.AUTH_TOKEN);
-          challenge = null;
-          $('pin').value = '';
-          show();
-        } catch (e) {
-          say($('setupStatus'), e.message, 'bad');
-        }
+          const d = await tv('/pairing/pair', 'PUT', {
+            DEVICE_ID: deviceId, CHALLENGE_TYPE: challenge.CHALLENGE_TYPE,
+            RESPONSE_VALUE: pin, PAIRING_REQ_TOKEN: challenge.PAIRING_REQ_TOKEN,
+          }, false);
+          if (!d.ITEM || !d.ITEM.AUTH_TOKEN) throw new Error('The TV did not accept that PIN.');
+          store.set('token', d.ITEM.AUTH_TOKEN); challenge = null; $('pin').value = ''; show();
+        } catch (e) { say($('setupStatus'), e.message, 'bad'); }
       };
-      $('launchSpace').onclick = async () => {
-        const url = $('launcherUrl').value.trim();
-        try {
-          if (!/^https?:\/\//i.test(url)) throw new Error('Launcher address must start with https://');
-          say($('status'), 'Sending to TV…');
-          await tv('/app/launch', 'PUT', {
-            VALUE: { APP_ID: '17', NAME_SPACE: 4, MESSAGE: url },
-          });
-          say($('status'), 'Sent. Our Space should open on the TV in a few seconds.', 'ok');
-        } catch (e) {
-          say($('status'), e.message, 'bad');
-        }
-      };
+
+      /* ---------- remote ---------- */
+      $('launchSpace').onclick = () => openOnTv($('status'), 'Sent. Our Space should open on the TV in a few seconds.');
       document.querySelectorAll('[data-key]').forEach(b => {
         b.onclick = async () => {
+          buzz();
           try {
-            await key(b.dataset.key);
-            say($('status'), '');
+            await key(b.dataset.key); say($('status'), '');
             if (b.dataset.key.startsWith('pow')) setTimeout(refresh, 2500);
-          } catch (e) {
-            say($('status'), e.message, 'bad');
-          }
+          } catch (e) { say($('status'), e.message, 'bad'); }
         };
       });
       for (const a of APPS) {
         const b = document.createElement('button');
-        b.textContent = a.name;
+        b.className = 'tile'; b.style.background = a.c;
+        b.innerHTML = `<b>${a.m}</b>${a.name}`;
         b.onclick = async () => {
+          buzz();
           try {
-            await tv('/app/launch', 'PUT', {
-              VALUE: { APP_ID: a.id, NAME_SPACE: a.ns, MESSAGE: '' },
-            });
+            await tv('/app/launch', 'PUT', { VALUE: { APP_ID: a.id, NAME_SPACE: a.ns, MESSAGE: '' } });
             say($('status'), `Asked the TV to open ${a.name}.`, 'ok');
-          } catch (e) {
-            say($('status'), e.message, 'bad');
-          }
+          } catch (e) { say($('status'), e.message, 'bad'); }
         };
         $('apps').appendChild(b);
       }
+
+      /* ---------- customize ---------- */
+      const saveCfg = () => store.set('cfg.v1', JSON.stringify(cfg));
+      function greeting() {
+        const h = new Date().getHours();
+        return h < 5 ? 'Good night' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+      }
+      function renderPreview() {
+        const pv = $('pv');
+        pv.className = 'tv t-' + (cfg.background === 'custom' ? 'alpine' : cfg.background);
+        pv.style.setProperty('--pv-accent', cfg.accent);
+        $('pvName').textContent = cfg.launcherName || 'Our Space';
+        $('pvHello').innerHTML = '';
+        $('pvHello').append(greeting() + ',', document.createElement('br'), cfg.name || 'everyone');
+        const wx = cfg.weatherEnabled && cfg.weatherLocation ? ' · ' + cfg.weatherLocation : '';
+        $('pvSub').textContent = (cfg.room || '') + wx;
+        $('pvDim').style.opacity = String(cfg.dimming / 100);
+        $('pvClock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: !cfg.clock24 });
+        document.querySelector('.tv .tiles').style.display = cfg.compact ? 'none' : 'flex';
+        $('dimv').textContent = cfg.dimming + '%';
+      }
+      function renderControls() {
+        $('cName').value = cfg.launcherName; $('cHello').value = cfg.name; $('cRoom').value = cfg.room;
+        $('cDim').value = cfg.dimming; $('cVideo').value = cfg.backgroundVideo;
+        $('cCompact').checked = cfg.compact; $('cRecent').checked = cfg.showRecent; $('cClock').checked = cfg.clock24;
+        $('cWx').checked = cfg.weatherEnabled; $('cLoc').value = cfg.weatherLocation;
+        document.querySelectorAll('#effects button').forEach(b => b.classList.toggle('on', b.dataset.v === cfg.effects));
+        document.querySelectorAll('#units button').forEach(b => b.classList.toggle('on', b.dataset.v === cfg.units));
+        document.querySelectorAll('#themes .swatch').forEach(b => b.classList.toggle('on', b.dataset.v === cfg.background));
+        document.querySelectorAll('#accents .c').forEach(b => b.classList.toggle('on', b.dataset.v.toLowerCase() === cfg.accent.toLowerCase()));
+        renderPreview();
+      }
+      function change(patch) { cfg = { ...cfg, ...patch }; saveCfg(); renderControls(); }
+      for (const [id, label, accent] of THEMES) {
+        const b = document.createElement('button');
+        b.className = 'swatch t-' + id; b.dataset.v = id; b.textContent = label;
+        b.onclick = () => {
+          if (id === 'video') { change({ background: 'video', backgroundVideo: cfg.backgroundVideo || FIREPLACE, accent }); return; }
+          change({ background: id, accent });
+        };
+        $('themes').appendChild(b);
+      }
+      for (const c of ACCENTS) {
+        const b = document.createElement('button');
+        b.className = 'c'; b.dataset.v = c; b.style.background = c; b.setAttribute('aria-label', 'Accent ' + c);
+        b.onclick = () => change({ accent: c });
+        $('accents').appendChild(b);
+      }
+      const cc = document.createElement('input'); cc.type = 'color'; cc.value = cfg.accent; cc.setAttribute('aria-label', 'Custom accent');
+      cc.oninput = () => change({ accent: cc.value }); $('accents').appendChild(cc);
+      $('cName').oninput = e => change({ launcherName: e.target.value });
+      $('cHello').oninput = e => change({ name: e.target.value });
+      $('cRoom').oninput = e => change({ room: e.target.value });
+      $('cDim').oninput = e => change({ dimming: Number(e.target.value) });
+      $('cVideo').onchange = e => {
+        const v = e.target.value.trim();
+        if (v && !/^https:\/\/\S+$/i.test(v)) { say($('cStatus'), 'Video links must start with https://', 'bad'); return; }
+        change({ backgroundVideo: v, background: v ? 'video' : cfg.background === 'video' ? 'alpine' : cfg.background });
+      };
+      $('useFire').onclick = () => change({ background: 'video', backgroundVideo: FIREPLACE, accent: '#f1c397' });
+      $('cCompact').onchange = e => change({ compact: e.target.checked });
+      $('cRecent').onchange = e => change({ showRecent: e.target.checked });
+      $('cClock').onchange = e => change({ clock24: e.target.checked });
+      $('cWx').onchange = e => change({ weatherEnabled: e.target.checked });
+      $('cLoc').oninput = e => change({ weatherLocation: e.target.value, weatherEnabled: e.target.value.trim() ? true : cfg.weatherEnabled });
+      document.querySelectorAll('#effects button').forEach(b => (b.onclick = () => change({ effects: b.dataset.v })));
+      document.querySelectorAll('#units button').forEach(b => (b.onclick = () => change({ units: b.dataset.v })));
+      $('applyTv').onclick = () => {
+        if (cfg.weatherEnabled && cfg.weatherLocation.trim().length < 2) {
+          say($('cStatus'), 'Enter a ZIP code or city, or turn weather off.', 'bad'); return;
+        }
+        openOnTv($('cStatus'), 'Saved. Your TV is opening Our Space with these settings.');
+      };
+      $('resetCfg').onclick = () => { cfg = { ...DEFAULT_CFG }; saveCfg(); renderControls(); say($('cStatus'), 'Reset. Tap “Save & show on TV” to apply.', 'ok'); };
+
+      /* ---------- settings ---------- */
       $('launcherUrl').value = store.get('launcherUrl', DEFAULT_LAUNCHER);
-      $('saveUrl').onclick = () => {
-        store.set('launcherUrl', $('launcherUrl').value.trim());
-        say($('status'), 'Saved.', 'ok');
-      };
-      $('resetUrl').onclick = () => {
-        store.del('launcherUrl');
-        $('launcherUrl').value = DEFAULT_LAUNCHER;
-        say($('status'), 'Reset to default.', 'ok');
-      };
-      $('forget').onclick = () => {
-        store.del('token');
-        show();
-      };
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && store.get('token')) refresh();
-      });
+      $('saveUrl').onclick = () => { store.set('launcherUrl', $('launcherUrl').value.trim()); say($('status'), 'Saved.', 'ok'); };
+      $('resetUrl').onclick = () => { store.del('launcherUrl'); $('launcherUrl').value = DEFAULT_LAUNCHER; };
+      $('forget').onclick = () => { store.del('token'); show(); };
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && store.get('token')) refresh(); });
+
+      renderControls();
+      setInterval(renderPreview, 30000);
       show();
     </script>
   </body>
