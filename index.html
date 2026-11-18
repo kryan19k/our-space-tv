@@ -397,6 +397,28 @@
         font-size: 12px;
         color: rgba(255, 255, 255, 0.72);
       }
+      .tile .em {
+        position: absolute;
+        top: 12px;
+        left: 14px;
+        font-size: 28px;
+        line-height: 1;
+      }
+      .vitem {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 10px 0;
+        border-top: 1px solid var(--line);
+        font-size: 14px;
+        word-break: break-all;
+      }
+      .vitem button {
+        min-height: 34px;
+        padding: 0 12px;
+        flex: none;
+      }
       /* bottom tab bar */
       nav {
         position: fixed;
@@ -730,6 +752,12 @@
         <p class="status" id="status"></p>
 
         <div class="card">
+          <h2>Scenes</h2>
+          <div class="row two" id="scenes"></div>
+          <small class="note">One tap turns the TV on if needed and sets everything up.</small>
+        </div>
+
+        <div class="card">
           <div class="row three">
             <button data-key="powon" class="power-on">
               <svg viewBox="0 0 24 24"><path d="M12 3v8M6.3 7a8 8 0 1 0 11.4 0" /></svg>On
@@ -766,6 +794,28 @@
             <button data-key="mute" aria-label="Mute"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM17 9l4 6m0-6-4 6" /></svg></button>
             <button data-key="volu" aria-label="Volume up"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM17 9a5 5 0 0 1 0 6M19.5 6.5a9 9 0 0 1 0 11" /></svg></button>
           </div>
+          <input type="range" id="volBar" min="0" max="100" step="1" value="0" aria-label="Volume" style="margin-top: 14px" />
+          <small class="note" style="text-align: center">Volume <b id="volv">–</b></small>
+        </div>
+
+        <div class="card">
+          <h2>Inputs</h2>
+          <div class="row two" id="inputs"></div>
+          <small class="note" id="inputNote">Jump straight to a connected device.</small>
+        </div>
+
+        <div class="card">
+          <h2>Sleep timer</h2>
+          <div class="seg" id="sleepSeg">
+            <button data-m="15">15m</button><button data-m="30">30m</button><button data-m="60">1h</button><button data-m="90">1.5h</button><button data-m="0">Off</button>
+          </div>
+          <small class="note" id="sleepLeft">No timer</small>
+          <small class="note">Keep this app open (or come back to it) for the timer to turn the TV off.</small>
+        </div>
+
+        <div class="card hidden" id="recentCard">
+          <h2>Continue</h2>
+          <div class="row two" id="recent"></div>
         </div>
 
         <div class="card">
@@ -811,6 +861,17 @@
           <input id="cVideo" type="url" inputmode="url" autocapitalize="off" autocorrect="off" placeholder="https://… .mp4" />
           <button id="useFire" style="width: 100%; margin-top: 10px">🔥 Use the fireplace video</button>
           <small class="note">Or paste a direct link to an H.264 MP4 or WebM. It streams to the TV; nothing is uploaded.</small>
+        </div>
+
+        <div class="card">
+          <h2>Video playlist</h2>
+          <div id="vlist"></div>
+          <input id="vAdd" type="url" inputmode="url" autocapitalize="off" autocorrect="off" placeholder="https://… .mp4" style="margin-top: 10px" />
+          <div class="row two" style="margin-top: 10px">
+            <button id="vAddBtn">Add link</button>
+            <button id="vFire">🔥 Add fireplace</button>
+          </div>
+          <small class="note">With two or more videos, the TV switches to the next one after about a minute.</small>
         </div>
 
         <div class="card">
@@ -918,7 +979,7 @@
       const ACCENTS = ['#c9c3ff', '#83ead1', '#f1c397', '#9cdbf0', '#ff9ec7', '#ffd36e'];
       const DEFAULT_CFG = {
         name: 'everyone', launcherName: 'Our Space', room: 'Living room', accent: '#f1c397',
-        background: 'video', backgroundVideo: FIREPLACE, effects: 'balanced', dimming: 25,
+        background: 'video', backgroundVideo: FIREPLACE, backgroundVideos: [], effects: 'balanced', dimming: 25,
         weatherEnabled: false, weatherLocation: '', units: 'fahrenheit',
         clock24: false, showRecent: true, compact: false,
       };
@@ -1004,6 +1065,7 @@
           const on = Number(d.ITEMS && d.ITEMS[0] && d.ITEMS[0].VALUE) === 1;
           $('dot').classList.toggle('on', on);
           $('pw').textContent = on ? 'TV on' : 'Standby';
+          if (on && store.get('token')) { void readVolume(); if (!inputsLoaded) void loadInputs(); }
           return on;
         } catch {
           $('dot').classList.remove('on');
@@ -1018,19 +1080,19 @@
         let s = ''; bytes.forEach(b => (s += String.fromCharCode(b)));
         return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
       }
-      function launchUrl() {
+      function launchUrl(c = cfg) {
         const page = ($('launcherUrl').value || DEFAULT_LAUNCHER).trim();
         if (!/^https?:\/\//i.test(page)) throw new Error('Launcher address must start with https://');
         const u = new URL(page);
         u.searchParams.set('tv', '1');
         u.searchParams.set('v', String(Date.now()));
-        const hash = new URLSearchParams({ ip: store.get('ip'), t: store.get('token'), d: deviceId, cfg: b64url(cfg) });
+        const hash = new URLSearchParams({ ip: store.get('ip'), t: store.get('token'), d: deviceId, cfg: b64url(c) });
         return u.href + '#' + hash.toString();
       }
-      async function openOnTv(statusEl, okText) {
+      async function openOnTv(statusEl, okText, c = cfg) {
         try {
           say(statusEl, 'Sending to TV…');
-          await tv('/app/launch', 'PUT', { VALUE: { APP_ID: '17', NAME_SPACE: 4, MESSAGE: launchUrl() } });
+          await tv('/app/launch', 'PUT', { VALUE: { APP_ID: '17', NAME_SPACE: 4, MESSAGE: launchUrl(c) } });
           say(statusEl, okText, 'ok');
           buzz();
         } catch (e) { say(statusEl, e.message, 'bad'); }
@@ -1128,6 +1190,7 @@
             await key(b.dataset.key); say($('status'), '');
             if (b.dataset.key === 'powon') void afterPowerOn();
             else if (b.dataset.key.startsWith('pow')) setTimeout(refresh, 2500);
+            else if (b.dataset.key.startsWith('vol') || b.dataset.key === 'mute') setTimeout(readVolume, 500);
           } catch (e) {
             say($('status'), e.unreachable && b.dataset.key === 'powon'
               ? "The TV isn't answering — it's in deep standby, which no phone can wake. On the TV: Menu → System → Power Mode → Quick Start. After that, On works from here."
@@ -1135,7 +1198,7 @@
           }
         };
       });
-      for (const a of APPS) {
+      function makeTile(a) {
         const b = document.createElement('button');
         b.className = 'tile'; b.style.setProperty('--b', a.b);
         const img = document.createElement('img'); img.alt = ''; img.src = 'logos/' + a.logo + '.svg';
@@ -1147,11 +1210,162 @@
         b.onclick = async () => {
           buzz();
           try {
-            await tv('/app/launch', 'PUT', { VALUE: { APP_ID: a.id, NAME_SPACE: a.ns, MESSAGE: a.url || null } });
+            await launchApp(a);
             say($('status'), `Asked the TV to open ${a.name}.`, 'ok');
+            remember(a.name);
           } catch (e) { say($('status'), e.message, 'bad'); }
         };
-        $('apps').appendChild(b);
+        return b;
+      }
+      const launchApp = a => tv('/app/launch', 'PUT', { VALUE: { APP_ID: a.id, NAME_SPACE: a.ns, MESSAGE: a.url || null } });
+      for (const a of APPS) $('apps').appendChild(makeTile(a));
+
+      /* ---------- continue row (last apps opened from this remote) ---------- */
+      function remember(name) {
+        let list = [];
+        try { list = JSON.parse(store.get('recent', '[]')); } catch {}
+        list = [name, ...list.filter(n => n !== name)].slice(0, 4);
+        store.set('recent', JSON.stringify(list));
+        renderRecent();
+      }
+      function renderRecent() {
+        let list = [];
+        try { list = JSON.parse(store.get('recent', '[]')); } catch {}
+        const apps = list.map(n => APPS.find(a => a.name === n)).filter(Boolean);
+        $('recent').replaceChildren(...apps.map(makeTile));
+        $('recentCard').classList.toggle('hidden', !apps.length);
+      }
+      renderRecent();
+
+      /* ---------- volume bar ---------- */
+      let volBusy = false;
+      async function readVolume() {
+        if (volBusy) return null;
+        try {
+          const d = await tv('/menu_native/dynamic/tv_settings/audio/volume');
+          const v = Number(d.ITEMS && d.ITEMS[0] && d.ITEMS[0].VALUE);
+          if (Number.isFinite(v)) { $('volBar').value = v; $('volv').textContent = v; return v; }
+        } catch {}
+        return null;
+      }
+      async function setVolume(target) {
+        const cur = await readVolume();
+        if (cur == null) throw new Error("Couldn't read the TV's volume.");
+        const diff = Math.round(target) - cur;
+        if (!diff) return;
+        const [CODESET, CODE] = KEYS[diff > 0 ? 'volu' : 'vold'];
+        const KEYLIST = Array.from({ length: Math.min(Math.abs(diff), 100) }, () => ({ CODESET, CODE, ACTION: 'KEYPRESS' }));
+        volBusy = true;
+        try { await tv('/key_command/', 'PUT', { KEYLIST }); } finally { volBusy = false; }
+        $('volBar').value = target; $('volv').textContent = Math.round(target);
+      }
+      $('volBar').oninput = e => { $('volv').textContent = e.target.value; };
+      $('volBar').onchange = async e => {
+        try { await setVolume(Number(e.target.value)); } catch (err) { say($('status'), err.message, 'bad'); }
+      };
+
+      /* ---------- inputs ---------- */
+      let inputsLoaded = false;
+      let inputItems = [];
+      function renderInputs() {
+        const items = inputItems.length ? inputItems : [1, 2, 3, 4].map(n => ({ label: 'HDMI ' + n, names: ['HDMI-' + n] }));
+        $('inputs').replaceChildren(...items.map(it => {
+          const b = document.createElement('button');
+          b.textContent = it.label;
+          b.onclick = async () => {
+            buzz();
+            try { await switchInput(it); say($('status'), `Switched to ${it.label}.`, 'ok'); }
+            catch (e) { say($('status'), e.message, 'bad'); }
+          };
+          return b;
+        }));
+      }
+      async function loadInputs() {
+        inputsLoaded = true;
+        try {
+          const d = await tv('/menu_native/dynamic/tv_settings/devices/name_input');
+          inputItems = (d.ITEMS || []).map(i => {
+            const v = i.VALUE && typeof i.VALUE === 'object' ? i.VALUE.NAME : i.VALUE;
+            const names = [...new Set([v, i.NAME, i.CNAME].filter(x => typeof x === 'string' && x))];
+            return { label: String(v || i.NAME || i.CNAME || 'Input').replace(/^HDMI-(\d)$/, 'HDMI $1'), names };
+          }).filter(i => i.names.length);
+        } catch { inputItems = []; }
+        renderInputs();
+      }
+      async function switchInput(it) {
+        const cur = await tv('/menu_native/dynamic/tv_settings/devices/current_input');
+        const hash = cur.ITEMS && cur.ITEMS[0] && cur.ITEMS[0].HASHVAL;
+        let err;
+        for (const name of it.names) {
+          try { await tv('/menu_native/dynamic/tv_settings/devices/current_input', 'PUT', { REQUEST: 'MODIFY', VALUE: name, HASHVAL: hash }); return; }
+          catch (e) { err = e; }
+        }
+        throw err || new Error('The TV would not switch inputs.');
+      }
+      renderInputs();
+
+      /* ---------- sleep timer ---------- */
+      const fmt = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+      function setSleep(min) {
+        store.set('sleepAt', min ? String(Date.now() + min * 60000) : '0');
+        document.querySelectorAll('#sleepSeg button').forEach(b => b.classList.toggle('on', Number(b.dataset.m) === min && min > 0));
+        void tickSleep();
+      }
+      async function tickSleep() {
+        const at = Number(store.get('sleepAt', '0'));
+        const el = $('sleepLeft');
+        if (!at) { el.textContent = 'No timer'; return; }
+        const left = at - Date.now();
+        if (left > 0) { el.textContent = 'TV turns off in ' + fmt(left); return; }
+        store.set('sleepAt', '0');
+        document.querySelectorAll('#sleepSeg button').forEach(b => b.classList.remove('on'));
+        // If the phone was asleep for a long time the user may have turned the TV on again; leave it alone.
+        if (-left > 600000) { el.textContent = 'No timer'; return; }
+        el.textContent = 'Turning the TV off…';
+        try { if ((await refresh()) === true) await key('powoff'); el.textContent = 'TV turned off.'; setTimeout(refresh, 2500); }
+        catch { el.textContent = 'Could not reach the TV to turn it off.'; }
+      }
+      document.querySelectorAll('#sleepSeg button').forEach(b => (b.onclick = () => { buzz(); setSleep(Number(b.dataset.m)); }));
+      setInterval(tickSleep, 1000);
+
+      /* ---------- scenes ---------- */
+      async function ensureOn() {
+        const on = await refresh();
+        if (on === true) return;
+        if (on === null) throw new Error("The TV isn't answering. If it's fully off, turn it on with its remote, or set Menu → System → Power Mode → Quick Start.");
+        say($('status'), 'Waking the TV…');
+        await key('powon');
+        for (let i = 0; i < 25; i++) { await sleep(2000); if ((await refresh()) === true) { await sleep(5000); return; } }
+        throw new Error('The TV did not wake in time.');
+      }
+      const openScene = c => tv('/app/launch', 'PUT', { VALUE: { APP_ID: '17', NAME_SPACE: 4, MESSAGE: launchUrl(c) } });
+      const firstVideo =() => (cfg.backgroundVideos && cfg.backgroundVideos[0]) || cfg.backgroundVideo || FIREPLACE;
+      const fireCfg = () => ({ ...cfg, background: 'video', backgroundVideo: firstVideo(), accent: '#f1c397', dimming: Math.max(cfg.dimming, 30) });
+      const SCENES = [
+        { name: 'Fireplace', em: '🔥', b: '#f1c397', tag: 'Cozy, quiet', run: async () => {
+          await ensureOn(); await openScene(fireCfg()); await setVolume(10);
+        } },
+        { name: 'Movie night', em: '🎬', b: '#e50914', tag: 'Netflix, louder', run: async () => {
+          await ensureOn(); await launchApp(APPS.find(a => a.name === 'Netflix')); await setVolume(30);
+        } },
+        { name: 'Wind down', em: '🌙', b: '#7c6cf0', tag: 'Fire, soft, 45 min', run: async () => {
+          await ensureOn(); await openScene(fireCfg()); await setVolume(8); setSleep(45);
+        } },
+        { name: 'All off', em: '⏻', b: '#ff6b81', tag: 'Turn the TV off', run: async () => { await key('powoff'); setSleep(0); setTimeout(refresh, 2500); } },
+      ];
+      for (const s of SCENES) {
+        const b = document.createElement('button');
+        b.className = 'tile'; b.style.setProperty('--b', s.b);
+        const em = document.createElement('span'); em.className = 'em'; em.textContent = s.em;
+        const sm = document.createElement('small'); sm.textContent = s.tag;
+        b.append(em, s.name, sm);
+        b.onclick = async () => {
+          buzz(); b.disabled = true;
+          try { say($('status'), `${s.name}…`); await s.run(); say($('status'), `${s.name} is set.`, 'ok'); }
+          catch (e) { say($('status'), e.message, 'bad'); }
+          finally { b.disabled = false; }
+        };
+        $('scenes').appendChild(b);
       }
 
       /* ---------- customize ---------- */
@@ -1179,12 +1393,37 @@
         $('cDim').value = cfg.dimming; $('cVideo').value = cfg.backgroundVideo;
         $('cCompact').checked = cfg.compact; $('cRecent').checked = cfg.showRecent; $('cClock').checked = cfg.clock24;
         $('cWx').checked = cfg.weatherEnabled; $('cLoc').value = cfg.weatherLocation;
+        renderPlaylist();
         document.querySelectorAll('#effects button').forEach(b => b.classList.toggle('on', b.dataset.v === cfg.effects));
         document.querySelectorAll('#units button').forEach(b => b.classList.toggle('on', b.dataset.v === cfg.units));
         document.querySelectorAll('#themes .swatch').forEach(b => b.classList.toggle('on', b.dataset.v === cfg.background));
         document.querySelectorAll('#accents .c').forEach(b => b.classList.toggle('on', b.dataset.v.toLowerCase() === cfg.accent.toLowerCase()));
         renderPreview();
       }
+      function renderPlaylist() {
+        const list = cfg.backgroundVideos || [];
+        const rows = list.map((u, i) => {
+          const row = document.createElement('div'); row.className = 'vitem';
+          const name = document.createElement('span');
+          name.textContent = decodeURIComponent(u.split('/').pop().split('?')[0] || u);
+          const rm = document.createElement('button'); rm.textContent = 'Remove';
+          rm.onclick = () => setPlaylist(list.filter((_, j) => j !== i));
+          row.append(name, rm); return row;
+        });
+        if (!rows.length) { const n = document.createElement('small'); n.className = 'note'; n.textContent = 'Empty. The single video above is used.'; rows.push(n); }
+        $('vlist').replaceChildren(...rows);
+      }
+      function setPlaylist(list) {
+        list = list.slice(0, 8);
+        change(list.length ? { backgroundVideos: list, backgroundVideo: list[0], background: 'video' } : { backgroundVideos: [] });
+      }
+      function addToPlaylist(u) {
+        if (!/^https:\/\/\S+$/i.test(u)) { say($('cStatus'), 'Video links must start with https://', 'bad'); return; }
+        const list = cfg.backgroundVideos && cfg.backgroundVideos.length ? cfg.backgroundVideos : (cfg.backgroundVideo ? [cfg.backgroundVideo] : []);
+        if (!list.includes(u)) setPlaylist([...list, u]);
+      }
+      $('vAddBtn').onclick = () => { addToPlaylist($('vAdd').value.trim()); $('vAdd').value = ''; };
+      $('vFire').onclick = () => addToPlaylist(FIREPLACE);
       function change(patch) { cfg = { ...cfg, ...patch }; saveCfg(); renderControls(); }
       for (const [id, label, accent] of THEMES) {
         const b = document.createElement('button');
@@ -1210,9 +1449,9 @@
       $('cVideo').onchange = e => {
         const v = e.target.value.trim();
         if (v && !/^https:\/\/\S+$/i.test(v)) { say($('cStatus'), 'Video links must start with https://', 'bad'); return; }
-        change({ backgroundVideo: v, background: v ? 'video' : cfg.background === 'video' ? 'alpine' : cfg.background });
+        change({ backgroundVideos: [], backgroundVideo: v, background: v ? 'video' : cfg.background === 'video' ? 'alpine' : cfg.background });
       };
-      $('useFire').onclick = () => change({ background: 'video', backgroundVideo: FIREPLACE, accent: '#f1c397' });
+      $('useFire').onclick = () => change({ background: 'video', backgroundVideos: [], backgroundVideo: FIREPLACE, accent: '#f1c397' });
       $('cCompact').onchange = e => change({ compact: e.target.checked });
       $('cRecent').onchange = e => change({ showRecent: e.target.checked });
       $('cClock').onchange = e => change({ clock24: e.target.checked });
