@@ -903,6 +903,7 @@
         { name: 'Max', ns: 2, id: '128', b: '#5b3df5', logo: 'max', tag: 'Movies & TV' },
         { name: 'Peacock', ns: 2, id: '88', b: '#f5c518', logo: '', tag: 'Movies & TV' },
         { name: 'Paramount+', ns: 2, id: '37', b: '#0064ff', logo: 'paramountplus', tag: 'Movies & TV' },
+        { name: 'Crunchyroll', ns: 4, id: '17', url: 'https://www.crunchyroll.com/', b: '#f47521', logo: 'crunchyroll', tag: 'Anime · web' },
         { name: 'Tubi', ns: 2, id: '61', b: '#fa382f', logo: 'tubi', tag: 'Free TV' },
         { name: 'Plex', ns: 2, id: '9', b: '#e5a00d', logo: 'plex', tag: 'Your media' },
       ];
@@ -1146,7 +1147,7 @@
         b.onclick = async () => {
           buzz();
           try {
-            await tv('/app/launch', 'PUT', { VALUE: { APP_ID: a.id, NAME_SPACE: a.ns, MESSAGE: null } });
+            await tv('/app/launch', 'PUT', { VALUE: { APP_ID: a.id, NAME_SPACE: a.ns, MESSAGE: a.url || null } });
             say($('status'), `Asked the TV to open ${a.name}.`, 'ok');
           } catch (e) { say($('status'), e.message, 'bad'); }
         };
