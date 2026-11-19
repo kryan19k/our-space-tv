@@ -921,7 +921,7 @@
           <label class="switch"><span>News on my topics</span><input type="checkbox" id="gNews" /></label>
           <div class="chips" id="topicChips"></div>
           <div class="row two" style="margin-top: 10px; grid-template-columns: 1fr auto">
-            <input id="topicAdd" type="text" maxlength="40" autocomplete="off" placeholder="Add a topic, e.g. Lakers" />
+            <input id="topicAdd" type="text" maxlength="40" autocomplete="off" placeholder="Other topic (headlines may be slower)" />
             <button id="topicBtn">Add</button>
           </div>
           <label class="switch" style="margin-top: 10px"><span>On this day in history</span><input type="checkbox" id="gHistory" /></label>
@@ -1012,7 +1012,7 @@
         name: 'everyone', launcherName: 'Our Space', room: 'Living room', accent: '#f1c397',
         background: 'video', backgroundVideo: FIREPLACE, backgroundVideos: [],
         showMarkets: true, showDebt: true, showNews: true, showHistory: true,
-        coins: ['bitcoin', 'ripple'], newsTopics: ['Technology', 'Crypto'], effects: 'balanced', dimming: 25,
+        coins: ['bitcoin', 'ripple'], newsTopics: ['Bitcoin', 'XRP', 'Technology'], effects: 'balanced', dimming: 25,
         weatherEnabled: false, weatherLocation: '', units: 'fahrenheit',
         clock24: false, showRecent: true, compact: false,
       };
@@ -1450,9 +1450,16 @@
           };
           return b;
         }));
-        $('topicChips').replaceChildren(...cfg.newsTopics.map(t => {
-          const b = document.createElement('button'); b.className = 'on'; b.textContent = t + ' ✕';
-          b.onclick = () => change({ newsTopics: cfg.newsTopics.filter(x => x !== t) });
+        const lc = cfg.newsTopics.map(t => t.toLowerCase());
+        const extra = cfg.newsTopics.filter(t => !AVAILABLE_TOPICS.some(a => a.toLowerCase() === t.toLowerCase()));
+        $('topicChips').replaceChildren(...[...AVAILABLE_TOPICS, ...extra].map(t => {
+          const b = document.createElement('button'); b.textContent = t;
+          const on = lc.includes(t.toLowerCase());
+          b.classList.toggle('on', on);
+          b.onclick = () => change({
+            newsTopics: on ? cfg.newsTopics.filter(x => x.toLowerCase() !== t.toLowerCase())
+              : cfg.newsTopics.length < 6 ? [...cfg.newsTopics, t] : cfg.newsTopics,
+          });
           return b;
         }));
         document.querySelectorAll('#effects button').forEach(b => b.classList.toggle('on', b.dataset.v === cfg.effects));
@@ -1461,6 +1468,11 @@
         document.querySelectorAll('#accents .c').forEach(b => b.classList.toggle('on', b.dataset.v.toLowerCase() === cfg.accent.toLowerCase()));
         renderPreview();
       }
+      // Topics whose headlines are refreshed every 30 minutes by the news job in this site's repo.
+      let AVAILABLE_TOPICS = ['Bitcoin', 'XRP', 'Technology', 'Economy', 'Space', 'Gaming'];
+      fetch('news-topics.json', { cache: 'no-cache' }).then(r => r.json())
+        .then(l => { if (Array.isArray(l) && l.length) { AVAILABLE_TOPICS = l.filter(x => typeof x === 'string'); renderControls(); } })
+        .catch(() => {});
       const COINS = [['bitcoin', 'Bitcoin'], ['ripple', 'XRP'], ['ethereum', 'Ethereum'], ['solana', 'Solana'], ['dogecoin', 'Dogecoin'], ['cardano', 'Cardano'], ['litecoin', 'Litecoin'], ['chainlink', 'Chainlink']];
       $('gMarkets').onchange = e => change({ showMarkets: e.target.checked });
       $('gDebt').onchange = e => change({ showDebt: e.target.checked });
