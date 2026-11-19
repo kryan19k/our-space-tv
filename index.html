@@ -404,6 +404,22 @@
         font-size: 28px;
         line-height: 1;
       }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 6px 0 4px;
+      }
+      .chips button {
+        min-height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+        font-size: 14px;
+      }
+      .chips button.on {
+        background: var(--glass-2);
+        border-color: var(--accent);
+      }
       .vitem {
         display: flex;
         align-items: center;
@@ -897,6 +913,21 @@
           <small class="note">Your location is only stored on this phone and the TV.</small>
         </div>
 
+        <div class="card">
+          <h2>At a glance</h2>
+          <label class="switch"><span>Crypto prices</span><input type="checkbox" id="gMarkets" /></label>
+          <div class="chips" id="coinChips"></div>
+          <label class="switch" style="margin-top: 10px"><span>U.S. national debt (live)</span><input type="checkbox" id="gDebt" /></label>
+          <label class="switch"><span>News on my topics</span><input type="checkbox" id="gNews" /></label>
+          <div class="chips" id="topicChips"></div>
+          <div class="row two" style="margin-top: 10px; grid-template-columns: 1fr auto">
+            <input id="topicAdd" type="text" maxlength="40" autocomplete="off" placeholder="Add a topic, e.g. Lakers" />
+            <button id="topicBtn">Add</button>
+          </div>
+          <label class="switch" style="margin-top: 10px"><span>On this day in history</span><input type="checkbox" id="gHistory" /></label>
+          <small class="note">Shows on the TV home screen. Prices and news come straight from public sources; your topics are sent to a news service to fetch headlines.</small>
+        </div>
+
         <button class="hero" id="applyTv" style="min-height: 72px">
           <span class="ic"><svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg></span>
           <span><b>Save &amp; show on TV</b><small>Reopens Our Space with these settings</small></span>
@@ -979,7 +1010,9 @@
       const ACCENTS = ['#c9c3ff', '#83ead1', '#f1c397', '#9cdbf0', '#ff9ec7', '#ffd36e'];
       const DEFAULT_CFG = {
         name: 'everyone', launcherName: 'Our Space', room: 'Living room', accent: '#f1c397',
-        background: 'video', backgroundVideo: FIREPLACE, backgroundVideos: [], effects: 'balanced', dimming: 25,
+        background: 'video', backgroundVideo: FIREPLACE, backgroundVideos: [],
+        showMarkets: true, showDebt: true, showNews: true, showHistory: true,
+        coins: ['bitcoin', 'ripple'], newsTopics: ['Technology', 'Crypto'], effects: 'balanced', dimming: 25,
         weatherEnabled: false, weatherLocation: '', units: 'fahrenheit',
         clock24: false, showRecent: true, compact: false,
       };
@@ -1405,12 +1438,40 @@
         $('cCompact').checked = cfg.compact; $('cRecent').checked = cfg.showRecent; $('cClock').checked = cfg.clock24;
         $('cWx').checked = cfg.weatherEnabled; $('cLoc').value = cfg.weatherLocation;
         renderPlaylist();
+        $('gMarkets').checked = cfg.showMarkets; $('gDebt').checked = cfg.showDebt;
+        $('gNews').checked = cfg.showNews; $('gHistory').checked = cfg.showHistory;
+        $('coinChips').replaceChildren(...COINS.map(([id, label]) => {
+          const b = document.createElement('button'); b.textContent = label;
+          b.classList.toggle('on', cfg.coins.includes(id));
+          b.onclick = () => {
+            const has = cfg.coins.includes(id);
+            if (!has && cfg.coins.length >= 6) return;
+            change({ coins: has ? cfg.coins.filter(c => c !== id) : [...cfg.coins, id] });
+          };
+          return b;
+        }));
+        $('topicChips').replaceChildren(...cfg.newsTopics.map(t => {
+          const b = document.createElement('button'); b.className = 'on'; b.textContent = t + ' ✕';
+          b.onclick = () => change({ newsTopics: cfg.newsTopics.filter(x => x !== t) });
+          return b;
+        }));
         document.querySelectorAll('#effects button').forEach(b => b.classList.toggle('on', b.dataset.v === cfg.effects));
         document.querySelectorAll('#units button').forEach(b => b.classList.toggle('on', b.dataset.v === cfg.units));
         document.querySelectorAll('#themes .swatch').forEach(b => b.classList.toggle('on', b.dataset.v === cfg.background));
         document.querySelectorAll('#accents .c').forEach(b => b.classList.toggle('on', b.dataset.v.toLowerCase() === cfg.accent.toLowerCase()));
         renderPreview();
       }
+      const COINS = [['bitcoin', 'Bitcoin'], ['ripple', 'XRP'], ['ethereum', 'Ethereum'], ['solana', 'Solana'], ['dogecoin', 'Dogecoin'], ['cardano', 'Cardano'], ['litecoin', 'Litecoin'], ['chainlink', 'Chainlink']];
+      $('gMarkets').onchange = e => change({ showMarkets: e.target.checked });
+      $('gDebt').onchange = e => change({ showDebt: e.target.checked });
+      $('gNews').onchange = e => change({ showNews: e.target.checked });
+      $('gHistory').onchange = e => change({ showHistory: e.target.checked });
+      $('topicBtn').onclick = () => {
+        const t = $('topicAdd').value.trim();
+        if (t.length < 2) return;
+        if (!cfg.newsTopics.some(x => x.toLowerCase() === t.toLowerCase()) && cfg.newsTopics.length < 6) change({ newsTopics: [...cfg.newsTopics, t] });
+        $('topicAdd').value = '';
+      };
       function renderPlaylist() {
         const list = cfg.backgroundVideos || [];
         const rows = list.map((u, i) => {
