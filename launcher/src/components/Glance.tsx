@@ -138,106 +138,33 @@ function Debt() {
 
 interface Headline {
   title: string;
+  source: string;
   link: string;
-  pubDate: string;
+  date: string;
 }
-async function getJson(url: string) {
-  const ctl = new AbortController();
-  const t = setTimeout(() => ctl.abort(), 12000);
-  try {
-    const r = await fetch(url, { signal: ctl.signal });
-    if (!r.ok) throw new Error(String(r.status));
-    return await r.json();
-  } finally {
-    clearTimeout(t);
-  }
-}
-// Free news feeds rate-limit, so each topic is staggered and tries two sources before giving up.
-async function loadHeadlines(topic: string): Promise<Headline[]> {
-  try {
-    const feed = `https://news.google.com/rss/search?q=${encodeURIComponent(topic + ' when:2d')}&hl=en-US&gl=US&ceid=US:en`;
-    const j = await getJson(
-      `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed)}`
-    );
-    if (j.status === 'ok' && j.items?.length) return j.items.slice(0, 5);
-  } catch {
-    /* fall through to the second source */
-  }
-  const j = await getJson(
-    `https://api.gdeltproject.org/api/v2/doc/doc?query=${encodeURIComponent(topic + ' sourcelang:english')}&mode=artlist&maxrecords=6&format=json&sort=datedesc&timespan=2d`
-  );
-  return (j.articles ?? [])
-    .slice(0, 5)
-    .map((a: { title: string; url: string; domain: string; seendate: string }) => ({
-      title: `${a.title} - ${a.domain}`,
-      link: a.url,
-      pubDate: a.seendate,
-    }));
-}
-function TopicNews({
-  topic,
-  delay,
-  onItems,
-}: {
-  topic: string;
-  delay: number;
-  onItems: (h: Headline[]) => void;
-}) {
-  useEffect(() => {
-    let alive = true;
-    const run = () => {
-      loadHeadlines(topic)
-        .then(list => alive && list.length && onItems(list))
-        .catch(() => {});
-    };
-    const first = setTimeout(run, delay);
-    const timer = setInterval(run, 15 * 60000);
-    return () => {
-      alive = false;
-      clearTimeout(first);
-      clearInterval(timer);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic, delay]);
-  return null;
-}
+// Headlines are fetched every 30 minutes by a scheduled job (see .github/workflows/news.yml) and
+// published next to this page as news.json, so the TV never has to call a news service itself.
 function News({ topics }: { topics: string[] }) {
-  const [byTopic, setByTopic] = useState<Record<string, Headline[]>>({});
-  const [published, setPublished] = useState<Record<string, Headline[]> | null>(null);
-  const [feedError, setFeedError] = useState('');
+  const [feed, setFeed] = useState<Record<string, Headline[]> | null>(null);
+  const [error, setError] = useState('');
   const [active, setActive] = useState(0);
-  const key = topics.join('|');
-  // Headlines are refreshed every 30 minutes by a scheduled job and published next to this page.
   useEffect(() => {
     let alive = true;
-    const load = () =>
-      getJson(
-        new URL('../news.json', window.location.href).href + '?t=' + Math.floor(Date.now() / 600000)
-      )
-        .then(
-          (j: {
-            topics?: Record<
-              string,
-              { title: string; source: string; link: string; date: string }[]
-            >;
-          }) => {
-            if (!alive || !j.topics) return;
-            const map: Record<string, Headline[]> = {};
-            for (const [name, list] of Object.entries(j.topics))
-              map[name.toLowerCase()] = list.map(h => ({
-                title: h.source ? `${h.title} - ${h.source}` : h.title,
-                link: h.link,
-                pubDate: h.date,
-              }));
-            setPublished(map);
-            setFeedError('');
-          }
-        )
-        .catch(e => {
-          if (!alive) return;
-          setFeedError(e instanceof Error ? `${e.name}: ${e.message}` : String(e));
-          setPublished(cur => cur ?? {});
-        });
+    const load = async () => {
+      try {
+        const url = new URL('../news.json', window.location.href).href;
+        const r = await fetch(`${url}?t=${Math.floor(Date.now() / 600000)}`);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const j = (await r.json()) as { topics?: Record<string, Headline[]> };
+        if (!alive || !j.topics) return;
+        const map: Record<string, Headline[]> = {};
+        for (const [name, list] of Object.entries(j.topics)) map[name.toLowerCase()] = list;
+        setFeed(map);
+        setError('');
+      } catch (e) {
+        if (alive) setError(e instanceof Error ? `${e.name}: ${e.message}` : String(e));
+      }
+    };
     void load();
     const timer = setInterval(load, 10 * 60000);
     return () => {
@@ -245,56 +172,46 @@ function News({ topics }: { topics: string[] }) {
       clearInterval(timer);
     };
   }, []);
+  // Only topics the job publishes can be shown. Others are ignored rather than left blank.
+  const shown = feed ? topics.filter(t => feed[t.toLowerCase()]?.length) : topics;
+  const key = shown.join('|');
   useEffect(() => {
     setActive(0);
-    if (topics.length < 2) return;
-    const timer = setInterval(() => setActive(i => (i + 1) % topics.length), 20000);
+    if (shown.length < 2) return;
+    const timer = setInterval(() => setActive(i => (i + 1) % shown.length), 20000);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
-  const topic = topics[active % Math.max(topics.length, 1)];
-  const items = (topic && (published?.[topic.toLowerCase()] ?? byTopic[topic])) || [];
+  const topic = shown[active % Math.max(shown.length, 1)];
+  const items = (feed && topic && feed[topic.toLowerCase()]) || [];
   return (
     <article className="glance-card news">
       <h3>
         <Newspaper size={15} /> News
         <span className="topics">
-          {topics.map((t, i) => (
-            <i key={t} className={i === active % topics.length ? 'on' : ''}>
+          {shown.map((t, i) => (
+            <i key={t} className={i === active % shown.length ? 'on' : ''}>
               {t}
             </i>
           ))}
         </span>
       </h3>
-      {topics
-        .filter(t => published !== null && !published[t.toLowerCase()])
-        .map((t, n) => (
-          <TopicNews
-            key={t}
-            topic={t}
-            delay={n * 6500}
-            onItems={list => setByTopic(cur => (cur[t] === list ? cur : { ...cur, [t]: list }))}
-          />
-        ))}
       <ul className="headlines">
         {items.length ? (
-          items.slice(0, 4).map(h => {
-            const i = h.title.lastIndexOf(' - ');
-            return (
-              <li key={h.link}>
-                <span>{i > 0 ? h.title.slice(0, i) : h.title}</span>
-                {i > 0 && <small>{h.title.slice(i + 3)}</small>}
-              </li>
-            );
-          })
+          items.slice(0, 4).map(h => (
+            <li key={h.link}>
+              <span>{h.title}</span>
+              {h.source && <small>{h.source}</small>}
+            </li>
+          ))
         ) : (
           <li>
             <span>
-              {feedError
-                ? `Can't load the headline file (${feedError}). Trying live sources…`
-                : published === null
+              {error
+                ? `Can't load the headline file (${error}).`
+                : feed === null
                   ? 'Loading headlines…'
-                  : 'No headlines for this topic yet.'}
+                  : 'None of your chosen topics have headlines yet. Pick topics in the phone remote.'}
             </span>
           </li>
         )}

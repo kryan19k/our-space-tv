@@ -19,6 +19,8 @@ jobs:
         with:
           node-version: 22
       - run: node scripts/fetch-news.mjs
+        env:
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
       - name: Commit if changed
         run: |
           git config user.name "news-bot"

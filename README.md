@@ -68,7 +68,7 @@ A TV that is fully powered down does not answer on the network. On the TV set
 | What                  | Where                                                                     |
 | --------------------- | ------------------------------------------------------------------------- |
 | Look, widgets, videos | **Customize** tab on the phone remote, then **Save & show on TV**         |
-| News topics offered   | [`news-topics.json`](news-topics.json) (refreshed every 30 minutes)       |
+| News topics offered   | [`news-topics.json`](news-topics.json) (refreshed every 30 minutes; optional `NEWSAPI_KEY` secret adds a backup source) |
 | Apps on the remote    | `APPS` list in [`index.html`](index.html) (see [docs](docs/how-it-works.md)) |
 | Default home screen   | [`launcher/src/lib/appearance.ts`](launcher/src/lib/appearance.ts)        |
 | Background videos     | Put an H.264 MP4 in `videos/` and add its link in the Customize tab       |

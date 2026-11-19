@@ -39,7 +39,7 @@ These are called directly from the viewer's browser. Their terms apply to your u
 | National debt  | [U.S. Treasury Fiscal Data](https://fiscaldata.treasury.gov/) "Debt to the Penny" |
 | On this day    | [Wikimedia](https://api.wikimedia.org/) feed                            |
 | Weather        | [Open-Meteo](https://open-meteo.com/) geocoding and the [National Weather Service](https://www.weather.gov/) |
-| News headlines | Google News RSS, fetched by a scheduled GitHub Action (see below)       |
+| News headlines | Google News RSS, fetched by a scheduled GitHub Action (see below). Optional backup: [NewsAPI](https://newsapi.org/) with your own key stored as the `NEWSAPI_KEY` repository secret |
 
 `news.json` republishes **headline titles, source names and links only** (never article text). Google
 News feeds are offered for personal, non-commercial use. If you run your own copy, read their terms,

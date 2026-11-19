@@ -921,12 +921,8 @@
           <label class="switch" style="margin-top: 10px"><span>U.S. national debt (live)</span><input type="checkbox" id="gDebt" /></label>
           <label class="switch"><span>News on my topics</span><input type="checkbox" id="gNews" /></label>
           <div class="chips" id="topicChips"></div>
-          <div class="row two" style="margin-top: 10px; grid-template-columns: 1fr auto">
-            <input id="topicAdd" type="text" maxlength="40" autocomplete="off" placeholder="Other topic (headlines may be slower)" />
-            <button id="topicBtn">Add</button>
-          </div>
           <label class="switch" style="margin-top: 10px"><span>On this day in history</span><input type="checkbox" id="gHistory" /></label>
-          <small class="note">Shows on the TV home screen. Prices and news come straight from public sources; your topics are sent to a news service to fetch headlines.</small>
+          <small class="note">Shows on the TV home screen. Prices come straight from public sources. Headlines are gathered every 30 minutes for the topics above; to add a topic, add it to news-topics.json in the repository.</small>
         </div>
 
         <button class="hero" id="applyTv" style="min-height: 72px">
@@ -1480,12 +1476,6 @@
       $('gDebt').onchange = e => change({ showDebt: e.target.checked });
       $('gNews').onchange = e => change({ showNews: e.target.checked });
       $('gHistory').onchange = e => change({ showHistory: e.target.checked });
-      $('topicBtn').onclick = () => {
-        const t = $('topicAdd').value.trim();
-        if (t.length < 2) return;
-        if (!cfg.newsTopics.some(x => x.toLowerCase() === t.toLowerCase()) && cfg.newsTopics.length < 6) change({ newsTopics: [...cfg.newsTopics, t] });
-        $('topicAdd').value = '';
-      };
       function renderPlaylist() {
         const list = cfg.backgroundVideos || [];
         const rows = list.map((u, i) => {
