@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="referrer" content="no-referrer" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
@@ -735,7 +736,7 @@
           Use your home Wi-Fi, with the TV on. You only do this once per phone.
         </p>
         <label class="f" for="ip">TV address</label>
-        <input id="ip" type="text" inputmode="decimal" autocomplete="off" placeholder="192.168.4.28" />
+        <input id="ip" type="text" inputmode="decimal" autocomplete="off" placeholder="192.168.1.50" />
         <div class="step">
           <b>1 · Allow the TV’s certificate</b>
           <small class="note" style="margin: 0"
@@ -979,8 +980,9 @@
     <script>
       'use strict';
       const PORT = 7345;
-      const DEFAULT_LAUNCHER = 'https://kryan19k.github.io/our-space-tv/tv/';
-      const FIREPLACE = 'https://kryan19k.github.io/our-space-tv/videos/fireplace.mp4';
+      // Resolved from where this page is hosted, so forks work without editing anything.
+      const DEFAULT_LAUNCHER = new URL('tv/', location.href).href;
+      const FIREPLACE = new URL('videos/fireplace.mp4', location.href).href;
       const KEYS = {
         up: [3, 8], down: [3, 0], left: [3, 1], right: [3, 7], ok: [3, 2],
         back: [4, 0], menu: [4, 8], home: [4, 15], info: [4, 6], input: [7, 1],
@@ -1195,10 +1197,10 @@
       function setIpFromInput() {
         const v = $('ip').value.trim();
         if (!/^(10|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d{1,3}(\.\d{1,3}){1,2}$/.test(v))
-          throw new Error('Enter your TV’s home-network IP, like 192.168.4.28');
+          throw new Error('Enter your TV’s home-network IP, like 192.168.1.50');
         store.set('ip', v); $('cert').href = base() + '/';
       }
-      $('ip').value = store.get('ip', '192.168.4.28');
+      $('ip').value = store.get('ip', '');
       $('ip').addEventListener('input', () => { try { setIpFromInput(); } catch {} });
       $('cert').addEventListener('click', e => {
         try { setIpFromInput(); } catch (err) { e.preventDefault(); say($('setupStatus'), err.message, 'bad'); }
