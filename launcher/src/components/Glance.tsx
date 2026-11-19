@@ -204,6 +204,7 @@ function TopicNews({
 function News({ topics }: { topics: string[] }) {
   const [byTopic, setByTopic] = useState<Record<string, Headline[]>>({});
   const [published, setPublished] = useState<Record<string, Headline[]> | null>(null);
+  const [feedError, setFeedError] = useState('');
   const [active, setActive] = useState(0);
   const key = topics.join('|');
   // Headlines are refreshed every 30 minutes by a scheduled job and published next to this page.
@@ -229,9 +230,14 @@ function News({ topics }: { topics: string[] }) {
                 pubDate: h.date,
               }));
             setPublished(map);
+            setFeedError('');
           }
         )
-        .catch(() => alive && setPublished(cur => cur ?? {}));
+        .catch(e => {
+          if (!alive) return;
+          setFeedError(e instanceof Error ? `${e.name}: ${e.message}` : String(e));
+          setPublished(cur => cur ?? {});
+        });
     void load();
     const timer = setInterval(load, 10 * 60000);
     return () => {
@@ -283,7 +289,13 @@ function News({ topics }: { topics: string[] }) {
           })
         ) : (
           <li>
-            <span>Loading headlines…</span>
+            <span>
+              {feedError
+                ? `Can't load the headline file (${feedError}). Trying live sources…`
+                : published === null
+                  ? 'Loading headlines…'
+                  : 'No headlines for this topic yet.'}
+            </span>
           </li>
         )}
       </ul>
