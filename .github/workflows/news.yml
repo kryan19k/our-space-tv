@@ -5,6 +5,9 @@ on:
   workflow_dispatch:
   push:
     paths: ['news-topics.json', 'scripts/fetch-news.mjs']
+concurrency:
+  group: news
+  cancel-in-progress: false
 permissions:
   contents: write
 jobs:
